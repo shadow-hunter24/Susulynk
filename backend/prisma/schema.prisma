@@ -1,0 +1,230 @@
+// Susulynk — Prisma Schema
+// Database: Neon PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum ContributionStatus {
+  PAID
+  PENDING
+  OVERDUE
+}
+
+enum PaymentMethod {
+  MOBILE_MONEY
+  CASH
+  BANK_TRANSFER
+}
+
+enum LoanStatus {
+  PENDING
+  ACTIVE
+  OVERDUE
+  REPAID
+  REJECTED
+}
+
+enum PayoutStatus {
+  UPCOMING
+  CURRENT
+  PAID
+}
+
+enum NotificationType {
+  CONTRIBUTION
+  LOAN
+  PAYOUT
+  REMINDER
+  MEMBER
+  REPAYMENT
+  SYSTEM
+}
+
+// ─────────────────────────────────────────────
+// MODELS
+// ─────────────────────────────────────────────
+
+model User {
+  id          String   @id @default(cuid())
+  fullName    String
+  phone       String   @unique
+  email       String?  @unique
+  password    String
+  bio         String?
+  avatarUrl   String?
+  isVerified  Boolean  @default(false)
+  otpCode     String?
+  otpExpiry   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  memberships  GroupMember[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Group {
+  id                 String   @id @default(cuid())
+  name               String
+  description        String?
+  contributionAmount Float    @default(200)
+  cycleType          String   @default("Monthly")
+  payoutDay          String   @default("15th")
+  interestRate       Float    @default(5)
+  currency           String   @default("GHS")
+  allowLoans         Boolean  @default(true)
+  requireApproval    Boolean  @default(true)
+  autoReminders      Boolean  @default(true)
+  isArchived         Boolean  @default(false)
+  isPublic           Boolean  @default(true)   // visible in browse list
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relations
+  members       GroupMember[]
+  contributions Contribution[]
+  loans         Loan[]
+  payouts       Payout[]
+  notifications Notification[]
+
+  @@map("groups")
+}
+
+model GroupMember {
+  id        String       @id @default(cuid())
+  role      Role         @default(MEMBER)
+  status    MemberStatus @default(ACTIVE)
+  joinedAt  DateTime     @default(now())
+  notes     String?
+
+  userId  String
+  groupId String
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // Relations
+  contributions Contribution[]
+  loans         Loan[]
+  payoutSlots   Payout[]
+
+  @@unique([userId, groupId])
+  @@map("group_members")
+}
+
+model Contribution {
+  id        String             @id @default(cuid())
+  amount    Float
+  status    ContributionStatus @default(PENDING)
+  method    PaymentMethod      @default(MOBILE_MONEY)
+  reference String?            // payment reference / MOMO transaction ID
+  notes     String?
+  cycle     String             // e.g. "June 2026"
+  paidAt    DateTime?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  memberId String
+  groupId  String
+  member   GroupMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  group    Group       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@map("contributions")
+}
+
+model Loan {
+  id           String     @id @default(cuid())
+  amount       Float
+  interestRate Float      @default(5)
+  totalDue     Float      // amount + interest
+  amountRepaid Float      @default(0)
+  status       LoanStatus @default(PENDING)
+  purpose      String
+  notes        String?
+  dueDate      DateTime?
+  approvedAt   DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  memberId String
+  groupId  String
+  member   GroupMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  group    Group       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // Relations
+  repayments LoanRepayment[]
+
+  @@map("loans")
+}
+
+model LoanRepayment {
+  id        String        @id @default(cuid())
+  amount    Float
+  method    PaymentMethod @default(MOBILE_MONEY)
+  reference String?
+  notes     String?
+  createdAt DateTime      @default(now())
+
+  loanId String
+  loan   Loan   @relation(fields: [loanId], references: [id], onDelete: Cascade)
+
+  @@map("loan_repayments")
+}
+
+model Payout {
+  id        String       @id @default(cuid())
+  amount    Float
+  status    PayoutStatus @default(UPCOMING)
+  month     String       // e.g. "June 2026"
+  position  Int          // rotation order (1-based)
+  paidAt    DateTime?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  memberId String
+  groupId  String
+  member   GroupMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  group    Group       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, position])
+  @@map("payouts")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  userId  String
+  groupId String?
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group   Group? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  @@map("notifications")
+}

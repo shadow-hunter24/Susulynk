@@ -39,12 +39,15 @@ const BrowseGroupsScreen = ({ navigation }) => {
 
       // If auto-approved (requireApproval = false), switch to the new group immediately
       if (res.member) {
-        await switchGroup({
-          id:                 res.member.group.id,
-          name:               res.member.group.name,
-          contributionAmount: res.member.group.contributionAmount,
-          currency:           res.member.group.currency,
-        });
+        await switchGroup(
+          {
+            id:                 res.member.group.id,
+            name:               res.member.group.name,
+            contributionAmount: res.member.group.contributionAmount,
+            currency:           res.member.group.currency,
+          },
+          'MEMBER', // auto-joined members are always MEMBER role
+        );
         await refreshUser();
         Alert.alert('Joined! 🎉', `You are now a member of "${group.name}".`, [
           { text: 'Go to Dashboard', onPress: () => navigation.navigate('MainTabs') },

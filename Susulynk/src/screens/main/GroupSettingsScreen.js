@@ -63,8 +63,11 @@ const GroupSettingsScreen = ({ navigation }) => {
         autoReminders:      draft.autoReminders,
       });
       setSettings({ ...draft });
-      // Update context so the group name reflects everywhere
-      await switchGroup({ ...ctxGroup, name: draft.groupName, contributionAmount: Number(draft.contributionAmount) });
+      // Update context so the group name reflects everywhere — preserve existing role
+      await switchGroup(
+        { ...ctxGroup, name: draft.groupName, contributionAmount: Number(draft.contributionAmount) },
+        undefined, // keep current role — switchGroup will find it from memberships
+      );
       setEditing(false);
       Alert.alert('Saved', 'Group settings updated.');
     } catch (err) {

@@ -95,27 +95,48 @@ export function AuthProvider({ children }) {
   const refreshUser = useCallback(async () => {
     try {
       const me = await authService.getMe();
-      const activeGroup = me.memberships?.[0]?.group || group;
+
+      // Find the role for the currently active group, not just memberships[0]
+      const activeMembership = group
+        ? me.memberships?.find(m => m.group?.id === group.id)
+        : me.memberships?.[0];
+
+      const activeGroup = activeMembership?.group || group;
+
       const cleanUser = {
-        id: me.id,
-        fullName: me.fullName,
-        phone: me.phone,
-        email: me.email,
-        bio: me.bio,
-        role: me.memberships?.[0]?.role || 'MEMBER',
+        id:          me.id,
+        fullName:    me.fullName,
+        phone:       me.phone,
+        email:       me.email,
+        bio:         me.bio,
+        role:        activeMembership?.role || user?.role || 'MEMBER',
         memberships: me.memberships || [],
       };
       setUser(cleanUser);
       if (activeGroup) setGroup(activeGroup);
       await SecureStore.setItemAsync(USER_KEY, JSON.stringify(cleanUser));
     } catch (_) {}
-  }, [group]);
+  }, [group, user]);
 
   // ── Switch active group ────────────────────────────────
-  const switchGroup = useCallback(async (newGroup) => {
-    setGroup(newGroup);
-    await SecureStore.setItemAsync(GROUP_KEY, JSON.stringify(newGroup));
-  }, []);
+  // Finds the user's role in the new group from their memberships
+  // and updates both group and user.role atomically
+  const switchGroup = useCallback(async (newGroup, roleOverride) => {
+    // Determine the correct role for this group
+    const membership = user?.memberships?.find(m => m.group?.id === newGroup.id);
+    const newRole = roleOverride || membership?.role || 'MEMBER';
+
+    const updatedUser = { ...user, role: newRole };
+    const updatedGroup = { ...newGroup };
+
+    setGroup(updatedGroup);
+    setUser(updatedUser);
+
+    await Promise.all([
+      SecureStore.setItemAsync(GROUP_KEY, JSON.stringify(updatedGroup)),
+      SecureStore.setItemAsync(USER_KEY, JSON.stringify(updatedUser)),
+    ]);
+  }, [user]);
 
   const isAdmin = user?.role === 'ADMIN';
   const groupId = group?.id || null;

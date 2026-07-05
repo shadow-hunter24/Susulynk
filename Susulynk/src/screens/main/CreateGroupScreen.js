@@ -55,8 +55,11 @@ const CreateGroupScreen = ({ navigation }) => {
         interestRate:       Number(form.interestRate),
       });
 
-      // Switch active group context to the new group
-      await switchGroup({ id: newGroup.id, name: newGroup.name, contributionAmount: newGroup.contributionAmount, currency: newGroup.currency });
+      // Switch active group context to the new group — creator is always ADMIN
+      await switchGroup(
+        { id: newGroup.id, name: newGroup.name, contributionAmount: newGroup.contributionAmount, currency: newGroup.currency },
+        'ADMIN',
+      );
       await refreshUser();
 
       Alert.alert('Group Created! 🎉', `"${newGroup.name}" is ready. You've been set as Admin.`, [

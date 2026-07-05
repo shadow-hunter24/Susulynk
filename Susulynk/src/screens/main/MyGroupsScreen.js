@@ -31,14 +31,18 @@ const MyGroupsScreen = ({ navigation }) => {
   const onRefresh = () => { setRefreshing(true); load(true); };
 
   const handleSwitch = async (membership) => {
-    const g = membership.group;
-    await switchGroup({
-      id:                 g.id,
-      name:               g.name,
-      contributionAmount: g.contributionAmount,
-      currency:           g.currency || 'GHS',
-    });
-    Alert.alert('Switched!', `Now viewing "${g.name}"`);
+    const g    = membership.group;
+    const role = membership.role; // 'ADMIN' or 'MEMBER' for this specific group
+    await switchGroup(
+      {
+        id:                 g.id,
+        name:               g.name,
+        contributionAmount: g.contributionAmount,
+        currency:           g.currency || 'GHS',
+      },
+      role,
+    );
+    Alert.alert('Switched!', `Now viewing "${g.name}" as ${role === 'ADMIN' ? 'Admin 👑' : 'Member'}`);
     navigation.goBack();
   };
 

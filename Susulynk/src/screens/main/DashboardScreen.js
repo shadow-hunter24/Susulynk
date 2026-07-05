@@ -12,12 +12,14 @@ import Typography from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
 import { reportService } from '../../services/reportService';
 import { contributionService } from '../../services/contributionService';
+import { notificationService } from '../../services/notificationService';
 
 const DashboardScreen = ({ navigation }) => {
   const { user, group, groupId, isAdmin } = useAuth();
 
   const [stats, setStats]       = useState(null);
   const [activity, setActivity] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading]   = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -25,12 +27,14 @@ const DashboardScreen = ({ navigation }) => {
     if (!groupId) { setLoading(false); return; }
     if (!silent) setLoading(true);
     try {
-      const [dash, contribs] = await Promise.all([
+      const [dash, contribs, notifRes] = await Promise.all([
         reportService.getDashboard(groupId),
         contributionService.getContributions(groupId, {}),
+        notificationService.getNotifications(),
       ]);
       setStats(dash);
       setActivity((contribs.contributions || []).slice(0, 5));
+      setUnreadCount(notifRes.unreadCount || 0);
     } catch (_) {}
     finally { setLoading(false); setRefreshing(false); }
   }, [groupId]);
@@ -82,6 +86,13 @@ const DashboardScreen = ({ navigation }) => {
           <View style={styles.topBarRight}>
             <TouchableOpacity style={styles.notifBtn} onPress={() => navigation.navigate('Notifications')}>
               <Text style={styles.notifIcon}>🔔</Text>
+              {unreadCount > 0 && (
+                <View style={styles.notifBadge}>
+                  <Text style={styles.notifBadgeText}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
             <TouchableOpacity style={styles.avatar} onPress={() => navigation.navigate('Profile')}>
               <Text style={styles.avatarText}>{initials}</Text>
@@ -200,6 +211,13 @@ const styles = StyleSheet.create({
   topBarRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   notifBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center', shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
   notifIcon: { fontSize: 18 },
+  notifBadge: {
+    position: 'absolute', top: -2, right: -2,
+    backgroundColor: Colors.error, borderRadius: 8,
+    minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  notifBadgeText: { color: Colors.white, fontSize: 9, fontWeight: '800' },
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: Colors.white, fontWeight: '700', fontSize: 14 },
   heroCard: { margin: Spacing.lg, backgroundColor: Colors.primary, borderRadius: Radius.xl, padding: Spacing.lg, shadowColor: Colors.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 },

@@ -99,14 +99,14 @@ router.patch('/:groupId/:payoutId/pay', authenticate, requireAdmin, async (req, 
       });
     }
 
-    // Notification
+    // Notify the payout recipient (not the admin who marked it)
     await prisma.notification.create({
       data: {
-        userId: req.user.id,
+        userId:  payout.member.user.id,  // the person receiving the payout
         groupId,
-        type: 'PAYOUT',
-        title: 'Payout Completed',
-        message: `Payout of GHS ${payout.amount} paid to ${payout.member.user.fullName}`,
+        type:    'PAYOUT',
+        title:   '🎉 You received your payout!',
+        message: `GHS ${payout.amount.toLocaleString()} has been paid out to you for ${payout.month}.`,
       },
     });
 

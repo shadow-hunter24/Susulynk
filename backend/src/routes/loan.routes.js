@@ -218,7 +218,26 @@ router.patch('/:groupId/:loanId', authenticate, requireAdmin, async (req, res, n
     const loan = await prisma.loan.update({
       where: { id: req.params.loanId },
       data,
+      include: {
+        member: { include: { user: { select: { id: true, fullName: true } } } },
+      },
     });
+
+    // Notify the member when their loan is approved or rejected
+    if (status === 'ACTIVE' || status === 'REJECTED') {
+      await prisma.notification.create({
+        data: {
+          userId:  loan.member.user.id,
+          groupId: req.params.groupId,
+          type:    'LOAN',
+          title:   status === 'ACTIVE' ? 'Loan Approved ✅' : 'Loan Request Declined',
+          message: status === 'ACTIVE'
+            ? `Your GHS ${loan.amount.toLocaleString()} loan has been approved. Due date: ${loan.dueDate ? new Date(loan.dueDate).toLocaleDateString() : 'TBD'}.`
+            : `Your GHS ${loan.amount.toLocaleString()} loan request was not approved at this time.`,
+        },
+      });
+    }
+
     res.json(loan);
   } catch (err) {
     next(err);

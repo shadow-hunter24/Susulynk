@@ -24,4 +24,8 @@ export const contributionService = {
 
   deleteContribution: (groupId, id) =>
     api.delete(`/contributions/${groupId}/${id}`),
+
+  // Admin: send contribution reminders to all unpaid members for a cycle
+  sendReminders: (groupId, cycle) =>
+    api.post(`/contributions/${groupId}/reminders`, { cycle }),
 };

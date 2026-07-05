@@ -57,7 +57,15 @@ export function AuthProvider({ children }) {
       role: res.user.memberships?.[0]?.role || 'MEMBER',
       memberships: res.user.memberships || [],
     };
-    await persistSession(res.token, cleanUser, activeGroup);
+    // Store full group object including interestRate
+    const fullGroup = activeGroup ? {
+      id:                 activeGroup.id,
+      name:               activeGroup.name,
+      contributionAmount: activeGroup.contributionAmount,
+      currency:           activeGroup.currency || 'GHS',
+      interestRate:       activeGroup.interestRate ?? 5,
+    } : null;
+    await persistSession(res.token, cleanUser, fullGroup);
     return res;
   }, []);
 

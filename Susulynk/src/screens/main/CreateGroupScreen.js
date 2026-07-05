@@ -57,7 +57,7 @@ const CreateGroupScreen = ({ navigation }) => {
 
       // Switch active group context to the new group — creator is always ADMIN
       await switchGroup(
-        { id: newGroup.id, name: newGroup.name, contributionAmount: newGroup.contributionAmount, currency: newGroup.currency },
+        { id: newGroup.id, name: newGroup.name, contributionAmount: newGroup.contributionAmount, currency: newGroup.currency, interestRate: newGroup.interestRate ?? 5 },
         'ADMIN',
       );
       await refreshUser();

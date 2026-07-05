@@ -19,7 +19,8 @@ const ContributionsScreen = ({ navigation }) => {
   const [summary, setSummary]             = useState({ paid: 0, expected: 0, outstanding: 0 });
   const [loading, setLoading]             = useState(true);
   const [refreshing, setRefreshing]       = useState(false);
-  const [confirming, setConfirming]       = useState({}); // { [id]: bool }
+  const [confirming, setConfirming]       = useState({});
+  const [sendingReminders, setSendingReminders] = useState(false);
 
   const load = useCallback(async (silent = false) => {
     if (!groupId) { setLoading(false); return; }
@@ -58,6 +59,31 @@ const ContributionsScreen = ({ navigation }) => {
     }
   };
 
+  const handleSendReminders = () => {
+    if (!selectedCycle) return;
+    Alert.alert(
+      'Send Reminders',
+      `Send contribution reminders to all unpaid members for ${selectedCycle}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Send',
+          onPress: async () => {
+            setSendingReminders(true);
+            try {
+              const res = await contributionService.sendReminders(groupId, selectedCycle);
+              Alert.alert('Done', res.message);
+            } catch (err) {
+              Alert.alert('Error', err.message);
+            } finally {
+              setSendingReminders(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const pct = summary.expected > 0 ? Math.round((summary.paid / summary.expected) * 100) : 0;
 
   const getInitials = (name = '') =>
@@ -71,6 +97,17 @@ const ContributionsScreen = ({ navigation }) => {
           {isAdmin && (
             <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('AddContribution')}>
               <Text style={styles.addBtnText}>+ Record</Text>
+            </TouchableOpacity>
+          )}
+          {isAdmin && selectedCycle && (
+            <TouchableOpacity
+              style={[styles.addBtn, { backgroundColor: Colors.warning }]}
+              onPress={handleSendReminders}
+              disabled={sendingReminders}
+            >
+              <Text style={styles.addBtnText}>
+                {sendingReminders ? '...' : '⏰ Remind'}
+              </Text>
             </TouchableOpacity>
           )}
           {!isAdmin && (

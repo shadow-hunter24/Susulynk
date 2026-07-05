@@ -231,6 +231,58 @@ router.delete('/:groupId/:id', authenticate, requireAdmin, async (req, res, next
   }
 });
 
+// ── POST /api/contributions/:groupId/reminders ── Admin sends contribution reminders
+// Finds all members who haven't paid for the current cycle and creates REMINDER notifications
+router.post('/:groupId/reminders', authenticate, requireAdmin, async (req, res, next) => {
+  try {
+    const { groupId } = req.params;
+    const { cycle } = req.body; // e.g. "July 2026"
+
+    if (!cycle) return res.status(400).json({ error: 'cycle is required (e.g. "July 2026")' });
+
+    const group = await prisma.group.findUnique({ where: { id: groupId } });
+    if (!group) return res.status(404).json({ error: 'Group not found' });
+    if (!group.autoReminders) return res.status(403).json({ error: 'Auto reminders are disabled for this group' });
+
+    // Get all active members
+    const members = await prisma.groupMember.findMany({
+      where: { groupId, status: 'ACTIVE' },
+      include: { user: { select: { id: true, fullName: true } } },
+    });
+
+    // Get members who have already paid for this cycle
+    const paidMemberIds = (await prisma.contribution.findMany({
+      where: { groupId, cycle, status: 'PAID' },
+      select: { memberId: true },
+    })).map(c => c.memberId);
+
+    // Send reminders only to members who haven't paid yet
+    const unpaidMembers = members.filter(m => !paidMemberIds.includes(m.id));
+
+    if (unpaidMembers.length === 0) {
+      return res.json({ message: 'All members have paid for this cycle', reminded: 0 });
+    }
+
+    await prisma.notification.createMany({
+      data: unpaidMembers.map(m => ({
+        userId:  m.user.id,
+        groupId,
+        type:    'REMINDER',
+        title:   '⏰ Contribution Reminder',
+        message: `Your GHS ${group.contributionAmount} contribution for ${cycle} is due. Please pay soon to keep the group on track.`,
+      })),
+    });
+
+    res.json({
+      message: `Reminders sent to ${unpaidMembers.length} member${unpaidMembers.length !== 1 ? 's' : ''}`,
+      reminded: unpaidMembers.length,
+      members: unpaidMembers.map(m => m.user.fullName),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── GET /api/contributions/:groupId/cycles ── List cycles ─
 router.get('/:groupId/meta/cycles', authenticate, requireMember, async (req, res, next) => {
   try {

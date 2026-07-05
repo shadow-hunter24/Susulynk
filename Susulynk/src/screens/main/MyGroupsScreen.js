@@ -39,6 +39,7 @@ const MyGroupsScreen = ({ navigation }) => {
         name:               g.name,
         contributionAmount: g.contributionAmount,
         currency:           g.currency || 'GHS',
+        interestRate:       g.interestRate ?? 5,
       },
       role,
     );

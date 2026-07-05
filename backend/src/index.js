@@ -77,8 +77,8 @@ app.use(errorHandler);
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Susulynk API running`);
   console.log(`   Local:   http://localhost:${PORT}`);
-  console.log(`   Network: http://10.98.101.16:${PORT}`);
-  console.log(`   Health:  http://10.98.101.16:${PORT}/health`);
+  console.log(`   Network: http://10.50.89.192:${PORT}`);
+  console.log(`   Health:  http://10.50.89.192:${PORT}/health`);
   console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 

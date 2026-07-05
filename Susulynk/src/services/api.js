@@ -5,7 +5,7 @@ import * as SecureStore from 'expo-secure-store';
 // Your machine's local Wi-Fi IP — phone and PC must be on the same network.
 // If your IP changes, update this value and restart the Expo dev server.
 // Android emulator alternative: 'http://10.0.2.2:3000/api'
-export const BASE_URL = 'http://10.98.101.16:3000/api';
+export const BASE_URL = 'http://10.50.89.192:3000/api';
 
 export const TOKEN_KEY = 'susulynk_token';
 export const USER_KEY = 'susulynk_user';

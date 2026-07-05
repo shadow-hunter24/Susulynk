@@ -25,15 +25,17 @@ const ContributionsScreen = ({ navigation }) => {
     if (!groupId) { setLoading(false); return; }
     if (!silent) setLoading(true);
     try {
-      const [cycleList, result] = await Promise.all([
-        contributionService.getCycles(groupId),
-        contributionService.getContributions(groupId, {
-          ...(selectedCycle ? { cycle: selectedCycle } : {}),
-          ...(filter !== 'all' ? { status: filter.toUpperCase() } : {}),
-        }),
-      ]);
+      const cycleList = await contributionService.getCycles(groupId);
       setCycles(cycleList);
+
+      // Pick the active cycle — use current state or default to latest
+      const activeCycle = selectedCycle || cycleList[0] || null;
       if (!selectedCycle && cycleList.length > 0) setSelectedCycle(cycleList[0]);
+
+      const result = await contributionService.getContributions(groupId, {
+        ...(activeCycle ? { cycle: activeCycle } : {}),
+        ...(filter !== 'all' ? { status: filter.toUpperCase() } : {}),
+      });
       setContributions(result.contributions || []);
       setSummary(result.summary || { paid: 0, expected: 0, outstanding: 0 });
     } catch (_) {}

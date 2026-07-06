@@ -1,16 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, FlatList,
   TouchableOpacity, TextInput, RefreshControl, ActivityIndicator,
 } from 'react-native';
 import Badge from '../../components/Badge';
-import Colors from '../../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
 import { Spacing, Radius } from '../../theme/spacing';
 import Typography from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
 import { memberService } from '../../services/memberService';
-
-const avatarColors = [Colors.primary, Colors.secondary, Colors.info, Colors.success, '#8B5CF6', '#EC4899'];
 
 // Mask phone: show first 3 and last 2 digits only e.g. 024*****67
 const maskPhone = (phone = '') => {
@@ -20,9 +19,12 @@ const maskPhone = (phone = '') => {
 
 const MembersScreen = ({ navigation }) => {
   const { groupId, isAdmin, user } = useAuth();
+  const { Colors } = useTheme();
+  const styles = makeStyles(Colors);
+  const avatarColors = [Colors.primary, Colors.secondary, Colors.info, Colors.success, '#8B5CF6', '#EC4899'];
   const [members, setMembers]     = useState([]);
   const [search, setSearch]       = useState('');
-  const [filter, setFilter]       = useState('all');
+  const [filter, setFilter]       = useState('active');
   const [loading, setLoading]     = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -32,7 +34,12 @@ const MembersScreen = ({ navigation }) => {
     try {
       const params = {};
       if (search) params.search = search;
-      if (filter !== 'all') params.status = filter.toUpperCase();
+      // 'all' tab → pass status=ALL so backend returns every status (admin only)
+      if (filter === 'all') {
+        params.status = 'ALL';
+      } else {
+        params.status = filter.toUpperCase();
+      }
       const data = await memberService.getMembers(groupId, params);
       setMembers(data);
     } catch (_) {}
@@ -40,6 +47,12 @@ const MembersScreen = ({ navigation }) => {
   }, [groupId, search, filter]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Re-fetch whenever we come back to this screen (e.g. after approving a request)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => load(true));
+    return unsubscribe;
+  }, [navigation, load]);
 
   const onRefresh = () => { setRefreshing(true); load(true); };
 
@@ -55,6 +68,8 @@ const MembersScreen = ({ navigation }) => {
     const status  = item.status?.toLowerCase();
     const role    = item.role?.toLowerCase();
     const joined  = new Date(item.joinedAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+
+    const badgeType = status === 'active' ? 'success' : status === 'pending' ? 'warning' : 'neutral';
 
     return (
       <TouchableOpacity
@@ -76,7 +91,7 @@ const MembersScreen = ({ navigation }) => {
           </Text>
         </View>
         <View style={styles.right}>
-          <Badge label={status} type={status === 'active' ? 'success' : 'neutral'} size="sm" />
+          <Badge label={status} type={badgeType} size="sm" />
           <Text style={styles.joined}>Joined {joined}</Text>
         </View>
       </TouchableOpacity>
@@ -86,8 +101,15 @@ const MembersScreen = ({ navigation }) => {
   const counts = {
     all:      members.length,
     active:   members.filter(m => m.status === 'ACTIVE').length,
+    pending:  members.filter(m => m.status === 'PENDING').length,
     inactive: members.filter(m => m.status === 'INACTIVE').length,
   };
+
+  // Tabs visible to regular members: active only
+  // Tabs visible to admins: all, active, pending, inactive
+  const filterTabs = isAdmin
+    ? ['active', 'pending', 'all', 'inactive']
+    : ['active'];
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -95,7 +117,7 @@ const MembersScreen = ({ navigation }) => {
         <Text style={styles.title}>Members</Text>
         {isAdmin && (
           <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('AddMember')}>
-            <Text style={styles.addBtnText}>+ Add</Text>
+            <Text style={styles.addBtnText}>Add</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -117,14 +139,15 @@ const MembersScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.filterRow}>
-        {['all', 'active', 'inactive'].map((f) => (
+        {filterTabs.map((f) => (
           <TouchableOpacity
             key={f}
             style={[styles.filterTab, filter === f && styles.filterTabActive]}
             onPress={() => setFilter(f)}
           >
             <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-              {f.charAt(0).toUpperCase() + f.slice(1)} ({counts[f]})
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+              {f !== 'all' ? ` (${counts[f]})` : ` (${counts.all})`}
             </Text>
           </TouchableOpacity>
         ))}
@@ -143,8 +166,10 @@ const MembersScreen = ({ navigation }) => {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />}
           ListEmptyComponent={() => (
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>👥</Text>
-              <Text style={styles.emptyText}>No members found</Text>
+              <Ionicons name="people-outline" size={52} color={Colors.textMuted} />
+              <Text style={styles.emptyText}>
+                {filter === 'pending' ? 'No pending requests' : 'No members found'}
+              </Text>
             </View>
           )}
         />
@@ -153,7 +178,7 @@ const MembersScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.sm },
   title: { ...Typography.h2, color: Colors.textPrimary },

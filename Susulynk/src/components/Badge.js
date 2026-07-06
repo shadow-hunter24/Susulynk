@@ -1,42 +1,29 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Colors from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
 import { Radius, Spacing } from '../theme/spacing';
 
-/**
- * Status badge - type: 'success' | 'error' | 'warning' | 'info' | 'neutral'
- */
 const Badge = ({ label, type = 'neutral', size = 'md' }) => {
-  const colors = {
+  const { Colors } = useTheme();
+
+  const colorMap = {
     success: { bg: '#DCFCE7', text: '#166534' },
-    error: { bg: '#FEE2E2', text: '#991B1B' },
+    error:   { bg: '#FEE2E2', text: '#991B1B' },
     warning: { bg: '#FEF3C7', text: '#92400E' },
-    info: { bg: '#DBEAFE', text: '#1E40AF' },
+    info:    { bg: '#DBEAFE', text: '#1E40AF' },
     neutral: { bg: Colors.background, text: Colors.textSecondary },
     primary: { bg: '#DCFCE7', text: Colors.primaryDark },
   };
 
-  const c = colors[type] || colors.neutral;
+  const c = colorMap[type] || colorMap.neutral;
 
   return (
-    <View style={[styles.badge, { backgroundColor: c.bg }, size === 'sm' && styles.small]}>
-      <Text style={[styles.text, { color: c.text }, size === 'sm' && styles.smallText]}>
+    <View style={[{ backgroundColor: c.bg, paddingHorizontal: Spacing.sm + 2, paddingVertical: 3, borderRadius: Radius.full, alignSelf: 'flex-start' }, size === 'sm' && { paddingHorizontal: Spacing.sm, paddingVertical: 2 }]}>
+      <Text style={[{ fontSize: 13, fontWeight: '600', color: c.text }, size === 'sm' && { fontSize: 11 }]}>
         {label}
       </Text>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  badge: {
-    paddingHorizontal: Spacing.sm + 2,
-    paddingVertical: 3,
-    borderRadius: Radius.full,
-    alignSelf: 'flex-start',
-  },
-  text: { fontSize: 13, fontWeight: '600' },
-  small: { paddingHorizontal: Spacing.sm, paddingVertical: 2 },
-  smallText: { fontSize: 11 },
-});
 
 export default Badge;

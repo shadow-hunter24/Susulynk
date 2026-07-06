@@ -86,6 +86,7 @@ router.post(
       const member = await prisma.groupMember.findUnique({
         where: { userId_groupId: { userId: req.user.id, groupId } },
       });
+      if (!member) return res.status(403).json({ error: 'You are not a member of this group' });
 
       // Check for existing active loan
       const activeLoan = await prisma.loan.findFirst({

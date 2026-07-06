@@ -1,13 +1,9 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
-import Colors from '../theme/colors';
+import { TouchableOpacity, Text, ActivityIndicator, View, StyleSheet } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 import { Radius, Spacing } from '../theme/spacing';
 import Typography from '../theme/typography';
 
-/**
- * Reusable Button component
- * variant: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
- */
 const Button = ({
   title,
   onPress,
@@ -20,84 +16,56 @@ const Button = ({
   textStyle,
   fullWidth = true,
 }) => {
-  const containerStyle = [
-    styles.base,
-    styles[variant],
-    styles[`size_${size}`],
-    fullWidth && styles.fullWidth,
-    (disabled || loading) && styles.disabled,
-    style,
-  ];
+  const { Colors } = useTheme();
 
-  const labelStyle = [
-    styles.label,
-    styles[`label_${variant}`],
-    styles[`labelSize_${size}`],
-    textStyle,
-  ];
+  const variantStyles = {
+    primary:   { bg: Colors.primary,  border: null,           labelColor: Colors.white },
+    secondary: { bg: Colors.secondary,border: null,           labelColor: Colors.white },
+    outline:   { bg: 'transparent',   border: Colors.primary, labelColor: Colors.primary },
+    ghost:     { bg: 'transparent',   border: null,           labelColor: Colors.primary },
+    danger:    { bg: Colors.error,    border: null,           labelColor: Colors.white },
+  };
+
+  const sizeStyles = {
+    sm: { paddingVertical: Spacing.xs + 2, paddingHorizontal: Spacing.md, fontSize: 14 },
+    md: { paddingVertical: Spacing.sm + 4, paddingHorizontal: Spacing.lg, fontSize: 16 },
+    lg: { paddingVertical: Spacing.md,     paddingHorizontal: Spacing.xl, fontSize: 18 },
+  };
+
+  const vs = variantStyles[variant] || variantStyles.primary;
+  const ss = sizeStyles[size] || sizeStyles.md;
+
+  const containerStyle = {
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    backgroundColor: vs.bg,
+    paddingVertical: ss.paddingVertical,
+    paddingHorizontal: ss.paddingHorizontal,
+    ...(vs.border ? { borderWidth: 1.5, borderColor: vs.border } : {}),
+    ...(fullWidth ? { width: '100%' } : {}),
+    ...((disabled || loading) ? { opacity: 0.5 } : {}),
+  };
+
+  const labelStyle = {
+    ...Typography.button,
+    color: vs.labelColor,
+    fontSize: ss.fontSize,
+  };
 
   return (
-    <TouchableOpacity
-      style={containerStyle}
-      onPress={onPress}
-      disabled={disabled || loading}
-      activeOpacity={0.8}
-    >
+    <TouchableOpacity style={[containerStyle, style]} onPress={onPress} disabled={disabled || loading} activeOpacity={0.8}>
       {loading ? (
-        <ActivityIndicator
-          color={variant === 'outline' || variant === 'ghost' ? Colors.primary : Colors.white}
-          size="small"
-        />
+        <ActivityIndicator color={variant === 'outline' || variant === 'ghost' ? Colors.primary : Colors.white} size="small" />
       ) : (
-        <View style={styles.content}>
-          {icon && <View style={styles.iconLeft}>{icon}</View>}
-          <Text style={labelStyle}>{title}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {icon && <View style={{ marginRight: Spacing.sm }}>{icon}</View>}
+          <Text style={[labelStyle, textStyle]}>{title}</Text>
         </View>
       )}
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  fullWidth: { width: '100%' },
-  content: { flexDirection: 'row', alignItems: 'center' },
-  iconLeft: { marginRight: Spacing.sm },
-
-  // Variants
-  primary: { backgroundColor: Colors.primary },
-  secondary: { backgroundColor: Colors.secondary },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: Colors.primary,
-  },
-  ghost: { backgroundColor: 'transparent' },
-  danger: { backgroundColor: Colors.error },
-
-  // Sizes
-  size_sm: { paddingVertical: Spacing.xs + 2, paddingHorizontal: Spacing.md },
-  size_md: { paddingVertical: Spacing.sm + 4, paddingHorizontal: Spacing.lg },
-  size_lg: { paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl },
-
-  disabled: { opacity: 0.5 },
-
-  // Label styles
-  label: { ...Typography.button },
-  label_primary: { color: Colors.white },
-  label_secondary: { color: Colors.white },
-  label_outline: { color: Colors.primary },
-  label_ghost: { color: Colors.primary },
-  label_danger: { color: Colors.white },
-
-  labelSize_sm: { fontSize: 14 },
-  labelSize_md: { fontSize: 16 },
-  labelSize_lg: { fontSize: 18 },
-});
 
 export default Button;

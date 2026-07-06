@@ -200,7 +200,10 @@ router.post(
 router.get('/mine', authenticate, async (req, res, next) => {
   try {
     const memberships = await prisma.groupMember.findMany({
-      where: { userId: req.user.id },
+      where: {
+        userId: req.user.id,
+        status: { in: ['ACTIVE', 'PENDING'] }, // include pending so UI can show awaiting state
+      },
       include: {
         group: {
           include: {
@@ -225,6 +228,7 @@ router.get('/:groupId', authenticate, requireMember, async (req, res, next) => {
       },
     });
     if (!group) return res.status(404).json({ error: 'Group not found' });
+    // Include payment account fields so members see where to send money
     res.json(group);
   } catch (err) {
     next(err);
@@ -243,6 +247,7 @@ router.patch(
       const {
         name, description, contributionAmount, cycleType,
         payoutDay, interestRate, allowLoans, requireApproval, autoReminders,
+        momoNumber, momoName, bankAccount, bankName, bankAccountName,
       } = req.body;
 
       const updated = await prisma.group.update({
@@ -257,6 +262,12 @@ router.patch(
           ...(allowLoans !== undefined && { allowLoans }),
           ...(requireApproval !== undefined && { requireApproval }),
           ...(autoReminders !== undefined && { autoReminders }),
+          // Payment account details
+          ...(momoNumber !== undefined && { momoNumber: momoNumber || null }),
+          ...(momoName !== undefined && { momoName: momoName || null }),
+          ...(bankAccount !== undefined && { bankAccount: bankAccount || null }),
+          ...(bankName !== undefined && { bankName: bankName || null }),
+          ...(bankAccountName !== undefined && { bankAccountName: bankAccountName || null }),
         },
       });
       res.json(updated);
@@ -274,6 +285,55 @@ router.patch('/:groupId/archive', authenticate, requireAdmin, async (req, res, n
       data: { isArchived: true },
     });
     res.json({ message: 'Group archived', group });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── DELETE /api/groups/:groupId ── Permanently delete group ──
+router.delete('/:groupId', authenticate, requireAdmin, async (req, res, next) => {
+  try {
+    const { groupId } = req.params;
+
+    // All child records (members, contributions, loans, repayments, payouts,
+    // notifications) are removed automatically via onDelete: Cascade in the schema.
+    await prisma.group.delete({ where: { id: groupId } });
+
+    res.json({ message: 'Group permanently deleted' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── POST /api/groups/:groupId/leave ── Member leaves a group ──
+router.post('/:groupId/leave', authenticate, async (req, res, next) => {
+  try {
+    const { groupId } = req.params;
+
+    const membership = await prisma.groupMember.findUnique({
+      where: { userId_groupId: { userId: req.user.id, groupId } },
+      select: { id: true, role: true, status: true },
+    });
+
+    if (!membership) {
+      return res.status(404).json({ error: 'You are not a member of this group' });
+    }
+
+    // Prevent the last admin from leaving — group would be unmanageable
+    if (membership.role === 'ADMIN') {
+      const otherAdmins = await prisma.groupMember.count({
+        where: { groupId, role: 'ADMIN', status: 'ACTIVE', userId: { not: req.user.id } },
+      });
+      if (otherAdmins === 0) {
+        return res.status(400).json({
+          error: 'You are the only admin. Assign another admin before leaving, or delete the group.',
+        });
+      }
+    }
+
+    await prisma.groupMember.delete({ where: { id: membership.id } });
+
+    res.json({ message: 'You have left the group' });
   } catch (err) {
     next(err);
   }

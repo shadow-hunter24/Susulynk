@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, ScrollView,
   TouchableOpacity, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
+import { Ionicons } from '@expo/vector-icons';
 import Colors from '../../theme/colors';
 import { Spacing, Radius } from '../../theme/spacing';
 import Typography from '../../theme/typography';

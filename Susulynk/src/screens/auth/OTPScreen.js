@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, ScrollView,
   TouchableOpacity, TextInput, Alert,
 } from 'react-native';
 import Button from '../../components/Button';
+import { Ionicons } from '@expo/vector-icons';
 import Colors from '../../theme/colors';
 import { Spacing, Radius } from '../../theme/spacing';
 import Typography from '../../theme/typography';

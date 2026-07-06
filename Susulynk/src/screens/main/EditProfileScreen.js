@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, ScrollView,
   TouchableOpacity, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
-import Colors from '../../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
 import { Spacing, Radius } from '../../theme/spacing';
 import Typography from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
@@ -13,6 +14,8 @@ import { authService } from '../../services/authService';
 
 const EditProfileScreen = ({ navigation }) => {
   const { user, refreshUser } = useAuth();
+  const { Colors } = useTheme();
+  const styles = makeStyles(Colors);
   const [form, setForm] = useState({
     fullName: user?.fullName || '',
     email:    user?.email    || '',
@@ -59,7 +62,7 @@ const EditProfileScreen = ({ navigation }) => {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={styles.backText}>←</Text>
+            <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Edit Profile</Text>
           <View style={{ width: 36 }} />
@@ -98,7 +101,7 @@ const EditProfileScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md },
   backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center', shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },

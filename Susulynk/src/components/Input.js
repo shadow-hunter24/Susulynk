@@ -1,18 +1,9 @@
 import React, { useState } from 'react';
-import {
-  View,
-  TextInput,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
-import Colors from '../theme/colors';
+import { View, TextInput, Text, TouchableOpacity } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 import { Radius, Spacing } from '../theme/spacing';
 import Typography from '../theme/typography';
 
-/**
- * Reusable Input component with label, error, and password toggle
- */
 const Input = ({
   label,
   placeholder,
@@ -32,23 +23,34 @@ const Input = ({
   inputStyle,
   ...rest
 }) => {
+  const { Colors } = useTheme();
   const [isSecure, setIsSecure] = useState(secureTextEntry);
-  const [focused, setFocused] = useState(false);
+  const [focused, setFocused]   = useState(false);
 
   return (
-    <View style={[styles.container, style]}>
-      {label && <Text style={styles.label}>{label}</Text>}
-      <View
-        style={[
-          styles.inputWrapper,
-          focused && styles.focused,
-          error && styles.errorBorder,
-          !editable && styles.disabled,
-        ]}
-      >
-        {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
+    <View style={[{ marginBottom: Spacing.md }, style]}>
+      {label && (
+        <Text style={{ ...Typography.label, color: Colors.textPrimary, marginBottom: Spacing.xs }}>
+          {label}
+        </Text>
+      )}
+      <View style={{
+        flexDirection: 'row', alignItems: 'center',
+        backgroundColor: Colors.surface,
+        borderWidth: 1.5,
+        borderColor: error ? Colors.error : focused ? Colors.primary : Colors.border,
+        borderRadius: Radius.md,
+        paddingHorizontal: Spacing.md,
+        opacity: editable ? 1 : 0.7,
+      }}>
+        {leftIcon && <View style={{ marginRight: Spacing.sm }}>{leftIcon}</View>}
         <TextInput
-          style={[styles.input, multiline && styles.multiline, inputStyle]}
+          style={[{
+            flex: 1,
+            ...Typography.body1,
+            color: Colors.textPrimary,
+            paddingVertical: Spacing.sm + 2,
+          }, multiline && { height: 100, textAlignVertical: 'top' }, inputStyle]}
           placeholder={placeholder}
           placeholderTextColor={Colors.textMuted}
           value={value}
@@ -64,56 +66,20 @@ const Input = ({
           {...rest}
         />
         {secureTextEntry ? (
-          <TouchableOpacity
-            onPress={() => setIsSecure(!isSecure)}
-            style={styles.rightIcon}
-          >
-            <Text style={styles.toggleText}>{isSecure ? '👁' : '🙈'}</Text>
+          <TouchableOpacity onPress={() => setIsSecure(!isSecure)} style={{ marginLeft: Spacing.sm }}>
+            <Text style={{ fontSize: 18 }}>{isSecure ? '👁' : '🙈'}</Text>
           </TouchableOpacity>
         ) : rightIcon ? (
-          <View style={styles.rightIcon}>{rightIcon}</View>
+          <View style={{ marginLeft: Spacing.sm }}>{rightIcon}</View>
         ) : null}
       </View>
       {error ? (
-        <Text style={styles.errorText}>{error}</Text>
+        <Text style={{ ...Typography.caption, color: Colors.error, marginTop: Spacing.xs }}>{error}</Text>
       ) : hint ? (
-        <Text style={styles.hintText}>{hint}</Text>
+        <Text style={{ ...Typography.caption, color: Colors.textMuted, marginTop: Spacing.xs }}>{hint}</Text>
       ) : null}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { marginBottom: Spacing.md },
-  label: {
-    ...Typography.label,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.xs,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-  },
-  focused: { borderColor: Colors.primary },
-  errorBorder: { borderColor: Colors.error },
-  disabled: { backgroundColor: Colors.background, opacity: 0.7 },
-  input: {
-    flex: 1,
-    ...Typography.body1,
-    color: Colors.textPrimary,
-    paddingVertical: Spacing.sm + 2,
-  },
-  multiline: { height: 100, textAlignVertical: 'top' },
-  leftIcon: { marginRight: Spacing.sm },
-  rightIcon: { marginLeft: Spacing.sm },
-  toggleText: { fontSize: 18 },
-  errorText: { ...Typography.caption, color: Colors.error, marginTop: Spacing.xs },
-  hintText: { ...Typography.caption, color: Colors.textMuted, marginTop: Spacing.xs },
-});
 
 export default Input;

@@ -1,26 +1,37 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import Colors from '../theme/colors';
+import { View, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 import { Radius, Spacing } from '../theme/spacing';
 import Typography from '../theme/typography';
 
-/**
- * Summary stat card for dashboards
- */
-const StatCard = ({ label, value, icon, color = Colors.primary, trend, trendUp }) => {
+const StatCard = ({ label, value, iconName, color, trend, trendUp }) => {
+  const { Colors } = useTheme();
+  const tint = color || Colors.primary;
+
   return (
-    <View style={[styles.card, { borderTopColor: color }]}>
-      <View style={styles.row}>
-        {icon && (
-          <View style={[styles.iconBox, { backgroundColor: color + '20' }]}>
-            <Text style={styles.icon}>{icon}</Text>
+    <View style={{
+      backgroundColor: Colors.surface, borderRadius: Radius.lg,
+      padding: Spacing.md, borderTopWidth: 3, borderTopColor: tint,
+      flex: 1, shadowColor: Colors.black,
+      shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06,
+      shadowRadius: 6, elevation: 2, margin: Spacing.xs,
+    }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        {iconName && (
+          <View style={{
+            width: 44, height: 44, borderRadius: Radius.md,
+            backgroundColor: tint + '18', alignItems: 'center',
+            justifyContent: 'center', marginRight: Spacing.sm,
+          }}>
+            <Ionicons name={iconName} size={22} color={tint} />
           </View>
         )}
-        <View style={styles.content}>
-          <Text style={styles.label}>{label}</Text>
-          <Text style={[styles.value, { color }]}>{value}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ ...Typography.caption, color: Colors.textSecondary, marginBottom: 2 }}>{label}</Text>
+          <Text style={{ ...Typography.h3, color: tint }}>{value}</Text>
           {trend && (
-            <Text style={[styles.trend, { color: trendUp ? Colors.success : Colors.error }]}>
+            <Text style={{ ...Typography.caption, color: trendUp ? Colors.success : Colors.error, marginTop: 2 }}>
               {trendUp ? '▲' : '▼'} {trend}
             </Text>
           )}
@@ -29,35 +40,5 @@ const StatCard = ({ label, value, icon, color = Colors.primary, trend, trendUp }
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    padding: Spacing.md,
-    borderTopWidth: 3,
-    flex: 1,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-    margin: Spacing.xs,
-  },
-  row: { flexDirection: 'row', alignItems: 'center' },
-  iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.sm,
-  },
-  icon: { fontSize: 20 },
-  content: { flex: 1 },
-  label: { ...Typography.caption, color: Colors.textSecondary, marginBottom: 2 },
-  value: { ...Typography.h3 },
-  trend: { ...Typography.caption, marginTop: 2 },
-});
 
 export default StatCard;

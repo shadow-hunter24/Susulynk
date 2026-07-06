@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, FlatList,
   TouchableOpacity, RefreshControl, ActivityIndicator,
 } from 'react-native';
 import Badge from '../../components/Badge';
-import Colors from '../../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
 import { Spacing, Radius } from '../../theme/spacing';
 import Typography from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
@@ -20,6 +21,8 @@ const statusConfig = {
 
 const LoansScreen = ({ navigation }) => {
   const { groupId, isAdmin } = useAuth();
+  const { Colors } = useTheme();
+  const styles = makeStyles(Colors);
   const [loans, setLoans]       = useState([]);
   const [summary, setSummary]   = useState({ totalOut: 0, totalOverdue: 0, totalRepaid: 0 });
   const [filter, setFilter]     = useState('all');
@@ -51,12 +54,12 @@ const LoansScreen = ({ navigation }) => {
         <Text style={styles.title}>Loans</Text>
         {isAdmin && (
           <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('NewLoan')}>
-            <Text style={styles.addBtnText}>+ New Loan</Text>
+            <Text style={styles.addBtnText}>New Loan</Text>
           </TouchableOpacity>
         )}
         {!isAdmin && (
           <TouchableOpacity style={[styles.addBtn, { backgroundColor: Colors.secondary }]} onPress={() => navigation.navigate('MyLoanRequest')}>
-            <Text style={styles.addBtnText}>🤲 Request Loan</Text>
+            <Text style={styles.addBtnText}>Request Loan</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -162,7 +165,7 @@ const LoansScreen = ({ navigation }) => {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />}
           ListEmptyComponent={() => (
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>🤝</Text>
+              <Ionicons name="hand-left-outline" size={52} color={Colors.textMuted} />
               <Text style={styles.emptyText}>No loans found</Text>
             </View>
           )}
@@ -172,7 +175,7 @@ const LoansScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.sm },
   title: { ...Typography.h2, color: Colors.textPrimary },

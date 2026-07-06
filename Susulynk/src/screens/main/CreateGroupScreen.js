@@ -1,22 +1,30 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, ScrollView,
   TouchableOpacity, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
-import Colors from '../../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
 import { Spacing, Radius } from '../../theme/spacing';
 import Typography from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
 import { groupService } from '../../services/groupService';
 
-const CYCLE_TYPES  = ['Monthly', 'Bi-weekly', 'Weekly'];
+const CYCLE_TYPES = [
+  { label: 'Weekly',        value: 'Weekly',        desc: 'Every 7 days' },
+  { label: 'Bi-weekly',     value: 'Bi-weekly',     desc: 'Every 2 weeks' },
+  { label: 'Monthly',       value: 'Monthly',       desc: 'Once a month' },
+  { label: 'Every 2 Months',value: 'Every 2 Months',desc: 'Every 2 months' },
+];
 const PAYOUT_DAYS  = ['1st', '15th', 'Last day'];
 const CURRENCIES   = ['GHS', 'USD', 'GBP'];
 
 const CreateGroupScreen = ({ navigation }) => {
   const { switchGroup, refreshUser } = useAuth();
+  const { Colors } = useTheme();
+  const styles = makeStyles(Colors);
 
   const [form, setForm] = useState({
     name:               '',
@@ -78,7 +86,7 @@ const CreateGroupScreen = ({ navigation }) => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={styles.backText}>←</Text>
+            <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Create Group</Text>
           <View style={{ width: 36 }} />
@@ -128,7 +136,7 @@ const CreateGroupScreen = ({ navigation }) => {
               onChangeText={(v) => update('contributionAmount', v)}
               keyboardType="decimal-pad"
               error={errors.contributionAmount}
-              leftIcon={<Text style={styles.icon}>💰</Text>}
+              hint={form.currency && form.contributionAmount ? `Each member pays ${form.currency} ${form.contributionAmount} per cycle` : undefined}
             />
 
             <Text style={styles.fieldLabel}>Currency</Text>
@@ -145,14 +153,21 @@ const CreateGroupScreen = ({ navigation }) => {
             </View>
 
             <Text style={styles.fieldLabel}>Contribution Cycle</Text>
-            <View style={styles.optionRow}>
-              {CYCLE_TYPES.map((c) => (
+            <Text style={styles.fieldHint}>How often do members make their contributions?</Text>
+            <View style={styles.cycleGrid}>
+              {CYCLE_TYPES.map(({ label, value, desc }) => (
                 <TouchableOpacity
-                  key={c}
-                  style={[styles.optionBtn, form.cycleType === c && styles.optionBtnActive]}
-                  onPress={() => update('cycleType', c)}
+                  key={value}
+                  style={[styles.cycleBtn, form.cycleType === value && styles.cycleBtnActive]}
+                  onPress={() => update('cycleType', value)}
+                  activeOpacity={0.8}
                 >
-                  <Text style={[styles.optionText, form.cycleType === c && styles.optionTextActive]}>{c}</Text>
+                  <Text style={[styles.cycleBtnLabel, form.cycleType === value && styles.cycleBtnLabelActive]}>
+                    {label}
+                  </Text>
+                  <Text style={[styles.cycleBtnDesc, form.cycleType === value && styles.cycleBtnDescActive]}>
+                    {desc}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -189,9 +204,10 @@ const CreateGroupScreen = ({ navigation }) => {
             <View style={styles.preview}>
               <Text style={styles.previewTitle}>Preview</Text>
               {[
-                ['Group', form.name],
-                ['Contribution', `${form.currency} ${form.contributionAmount} / ${form.cycleType.toLowerCase()}`],
-                ['Payout Day', `${form.payoutDay} of the month`],
+                ['Group',         form.name],
+                ['Contribution',  `${form.currency} ${form.contributionAmount || '—'} / cycle`],
+                ['Cycle',         form.cycleType],
+                ['Payout Day',    `${form.payoutDay} of the month`],
                 ['Interest Rate', `${form.interestRate}%`],
               ].map(([label, value], i) => (
                 <View key={i} style={styles.previewRow}>
@@ -224,7 +240,7 @@ const CreateGroupScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -269,6 +285,14 @@ const styles = StyleSheet.create({
   optionBtnActive: { borderColor: Colors.primary, backgroundColor: Colors.primary + '10' },
   optionText: { ...Typography.label, color: Colors.textSecondary },
   optionTextActive: { color: Colors.primary },
+  cycleGrid:          { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginBottom: Spacing.md },
+  cycleBtn:           { width: '47%', borderWidth: 1.5, borderColor: Colors.border, borderRadius: Radius.md, padding: Spacing.md },
+  cycleBtnActive:     { borderColor: Colors.primary, backgroundColor: Colors.primary + '10' },
+  cycleBtnLabel:      { ...Typography.label, color: Colors.textSecondary },
+  cycleBtnLabelActive:{ ...Typography.label, color: Colors.primary },
+  cycleBtnDesc:       { ...Typography.caption, color: Colors.textMuted, marginTop: 2 },
+  cycleBtnDescActive: { color: Colors.primary + 'AA' },
+  fieldHint:          { ...Typography.caption, color: Colors.textMuted, marginBottom: Spacing.sm, marginTop: -Spacing.xs },
   preview: {
     backgroundColor: Colors.primary + '08', borderRadius: Radius.lg,
     padding: Spacing.md, marginTop: Spacing.md,
@@ -279,5 +303,5 @@ const styles = StyleSheet.create({
   previewLabel: { ...Typography.body2, color: Colors.textSecondary },
   previewValue: { ...Typography.label, color: Colors.textPrimary },
 });
-
 export default CreateGroupScreen;
+

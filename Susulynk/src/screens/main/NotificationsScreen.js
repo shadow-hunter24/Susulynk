@@ -1,31 +1,22 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, FlatList,
   TouchableOpacity, RefreshControl, ActivityIndicator,
 } from 'react-native';
-import Colors from '../../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
 import { Spacing, Radius } from '../../theme/spacing';
 import Typography from '../../theme/typography';
 import { notificationService } from '../../services/notificationService';
 
-const typeColors = {
-  CONTRIBUTION: Colors.success,
-  LOAN:         Colors.secondary,
-  PAYOUT:       Colors.primary,
-  REMINDER:     Colors.warning,
-  MEMBER:       Colors.info,
-  REPAYMENT:    Colors.success,
-  SYSTEM:       Colors.textMuted,
-};
-
 const typeIcons = {
-  CONTRIBUTION: '💰',
-  LOAN:         '🤝',
-  PAYOUT:       '🎉',
-  REMINDER:     '⏰',
-  MEMBER:       '👤',
-  REPAYMENT:    '💳',
-  SYSTEM:       '📢',
+  CONTRIBUTION: 'wallet',
+  LOAN:         'cash',
+  PAYOUT:       'gift',
+  REMINDER:     'alarm',
+  MEMBER:       'person',
+  REPAYMENT:    'refresh-circle',
+  SYSTEM:       'megaphone',
 };
 
 const timeAgo = (dateStr) => {
@@ -41,6 +32,17 @@ const timeAgo = (dateStr) => {
 };
 
 const NotificationsScreen = ({ navigation }) => {
+  const { Colors } = useTheme();
+  const styles = makeStyles(Colors);
+  const typeColors = {
+    CONTRIBUTION: Colors.success,
+    LOAN:         Colors.secondary,
+    PAYOUT:       Colors.primary,
+    REMINDER:     Colors.warning,
+    MEMBER:       Colors.info,
+    REPAYMENT:    Colors.success,
+    SYSTEM:       Colors.textMuted,
+  };
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount]     = useState(0);
   const [loading, setLoading]             = useState(true);
@@ -72,15 +74,40 @@ const NotificationsScreen = ({ navigation }) => {
     await notificationService.markAllRead().catch(() => {});
   };
 
+  const handleTap = (item) => {
+    if (!item.isRead) markRead(item.id);
+    // Deep-link based on notification type
+    switch (item.type) {
+      case 'REMINDER':
+        // Take member straight to Pay Now screen
+        navigation.navigate('MemberPay');
+        break;
+      case 'CONTRIBUTION':
+        navigation.navigate('Contributions');
+        break;
+      case 'LOAN':
+        navigation.navigate('Loans');
+        break;
+      case 'REPAYMENT':
+        navigation.navigate('Loans');
+        break;
+      case 'PAYOUT':
+        navigation.navigate('MainTabs', { screen: 'Payout' });
+        break;
+      default:
+        break;
+    }
+  };
+
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={[styles.notifCard, !item.isRead && styles.notifCardUnread]}
-      onPress={() => { if (!item.isRead) markRead(item.id); }}
+      onPress={() => handleTap(item)}
       activeOpacity={0.85}
     >
       {!item.isRead && <View style={styles.unreadDot} />}
       <View style={[styles.iconBox, { backgroundColor: (typeColors[item.type] || Colors.primary) + '15' }]}>
-        <Text style={styles.notifIcon}>{typeIcons[item.type] || '📢'}</Text>
+        <Ionicons name={typeIcons[item.type] || 'megaphone'} size={20} color={typeColors[item.type] || Colors.primary} />
       </View>
       <View style={styles.notifContent}>
         <View style={styles.notifHeader}>
@@ -88,6 +115,9 @@ const NotificationsScreen = ({ navigation }) => {
           <Text style={styles.notifTime}>{timeAgo(item.createdAt)}</Text>
         </View>
         <Text style={styles.notifMessage} numberOfLines={2}>{item.message}</Text>
+        {item.type === 'REMINDER' && (
+          <Text style={styles.notifAction}>Tap to pay now →</Text>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -96,7 +126,7 @@ const NotificationsScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>←</Text>
+          <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.titleRow}>
           <Text style={styles.title}>Notifications</Text>
@@ -124,7 +154,7 @@ const NotificationsScreen = ({ navigation }) => {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />}
           ListEmptyComponent={() => (
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>🔔</Text>
+              <Ionicons name="notifications-outline" size={48} color={Colors.textMuted} style={{ marginBottom: Spacing.sm }} />
               <Text style={styles.emptyTitle}>All caught up!</Text>
               <Text style={styles.emptyText}>No new notifications</Text>
             </View>
@@ -135,7 +165,7 @@ const NotificationsScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.sm },
   backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center', shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
@@ -157,6 +187,7 @@ const styles = StyleSheet.create({
   notifTitleUnread: { color: Colors.textPrimary },
   notifTime: { ...Typography.caption, color: Colors.textMuted, marginLeft: Spacing.sm },
   notifMessage: { ...Typography.caption, color: Colors.textSecondary, lineHeight: 18 },
+  notifAction: { ...Typography.caption, color: Colors.warning, fontWeight: '600', marginTop: 4 },
   empty: { alignItems: 'center', paddingTop: Spacing.xxl },
   emptyIcon: { fontSize: 56, marginBottom: Spacing.md },
   emptyTitle: { ...Typography.h3, color: Colors.textPrimary, marginBottom: Spacing.xs },

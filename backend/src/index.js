@@ -15,6 +15,7 @@ const notificationRoutes = require('./routes/notification.routes');
 const reportRoutes = require('./routes/report.routes');
 
 const { errorHandler } = require('./middleware/error.middleware');
+const prisma = require('./lib/prisma');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -72,14 +73,38 @@ app.use('*', (req, res) => {
 // ── Global error handler ──────────────────────────────────
 app.use(errorHandler);
 
+// ── Keep Neon alive ───────────────────────────────────────
+// Neon free-tier databases sleep after ~5 min of inactivity.
+// A lightweight ping every 4 minutes keeps the connection warm
+// while the server is running, preventing cold-start timeouts.
+const keepAlive = () => {
+  setInterval(async () => {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+    } catch (_) {
+      // Silent — the next real request will reconnect automatically
+    }
+  }, 4 * 60 * 1000); // every 4 minutes
+};
+
 // ── Start ─────────────────────────────────────────────────
-// Bind to 0.0.0.0 so the backend is reachable from your phone on the same Wi-Fi
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 Susulynk API running`);
   console.log(`   Local:   http://localhost:${PORT}`);
   console.log(`   Network: http://10.50.89.192:${PORT}`);
   console.log(`   Health:  http://10.50.89.192:${PORT}/health`);
   console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
+
+  // Warm up the database connection on startup so the first real request
+  // doesn't hit a cold-start timeout
+  try {
+    await prisma.$connect();
+    console.log('   Database: connected ✅');
+    keepAlive();
+  } catch (err) {
+    console.error('   Database: connection failed ❌', err.message);
+    console.error('   Check your DATABASE_URL in .env');
+  }
 });
 
 module.exports = app;

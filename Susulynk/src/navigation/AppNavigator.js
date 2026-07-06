@@ -6,7 +6,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
-import Colors from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 // Auth
 import WelcomeScreen      from '../screens/auth/WelcomeScreen';
@@ -40,15 +41,19 @@ import BrowseGroupsScreen   from '../screens/main/BrowseGroupsScreen';
 import JoinRequestsScreen   from '../screens/main/JoinRequestsScreen';
 import MemberPayScreen      from '../screens/main/MemberPayScreen';
 import MyLoanRequestScreen  from '../screens/main/MyLoanRequestScreen';
+import HelpFAQScreen        from '../screens/main/HelpFAQScreen';
+import ContactSupportScreen from '../screens/main/ContactSupportScreen';
+import RateAppScreen        from '../screens/main/RateAppScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
 
-function TabIcon({ emoji, focused }) {
-  return <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.45 }}>{emoji}</Text>;
+function TabIcon({ name, focused, color }) {
+  return <Ionicons name={focused ? name : `${name}-outline`} size={24} color={color} />;
 }
 
 function MainTabs() {
+  const { Colors } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -67,23 +72,24 @@ function MainTabs() {
       }}
     >
       <Tab.Screen name="Dashboard"     component={DashboardScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} />, tabBarLabel: 'Home' }} />
+        options={{ tabBarIcon: ({ focused, color }) => <TabIcon name="home" focused={focused} color={color} />, tabBarLabel: 'Home' }} />
       <Tab.Screen name="Members"       component={MembersScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="👥" focused={focused} />, tabBarLabel: 'Members' }} />
+        options={{ tabBarIcon: ({ focused, color }) => <TabIcon name="people" focused={focused} color={color} />, tabBarLabel: 'Members' }} />
       <Tab.Screen name="Contributions" component={ContributionsScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="💰" focused={focused} />, tabBarLabel: 'Savings' }} />
+        options={{ tabBarIcon: ({ focused, color }) => <TabIcon name="wallet" focused={focused} color={color} />, tabBarLabel: 'Savings' }} />
       <Tab.Screen name="Loans"         component={LoansScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="🤝" focused={focused} />, tabBarLabel: 'Loans' }} />
+        options={{ tabBarIcon: ({ focused, color }) => <TabIcon name="hand-left" focused={focused} color={color} />, tabBarLabel: 'Loans' }} />
       <Tab.Screen name="Payout"        component={PayoutScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="🎉" focused={focused} />, tabBarLabel: 'Payout' }} />
+        options={{ tabBarIcon: ({ focused, color }) => <TabIcon name="gift" focused={focused} color={color} />, tabBarLabel: 'Payout' }} />
       <Tab.Screen name="Reports"       component={ReportsScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="📊" focused={focused} />, tabBarLabel: 'Reports' }} />
+        options={{ tabBarIcon: ({ focused, color }) => <TabIcon name="bar-chart" focused={focused} color={color} />, tabBarLabel: 'Reports' }} />
     </Tab.Navigator>
   );
 }
 
 export default function AppNavigator() {
   const { token, loading } = useAuth();
+  const { Colors } = useTheme();
 
   if (loading) {
     return (
@@ -115,6 +121,9 @@ export default function AppNavigator() {
             <Stack.Screen name="JoinRequests"   component={JoinRequestsScreen} />
             <Stack.Screen name="MemberPay"      component={MemberPayScreen}      options={{ presentation: 'modal' }} />
             <Stack.Screen name="MyLoanRequest"  component={MyLoanRequestScreen}  options={{ presentation: 'modal' }} />
+            <Stack.Screen name="HelpFAQ"        component={HelpFAQScreen} />
+            <Stack.Screen name="ContactSupport" component={ContactSupportScreen} />
+            <Stack.Screen name="RateApp"        component={RateAppScreen} />
             {/* Also needed from Profile → Change Password */}
             <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
             <Stack.Screen name="OTP"            component={OTPScreen} />

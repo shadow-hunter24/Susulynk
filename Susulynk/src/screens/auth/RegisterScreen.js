@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, ScrollView,
   TouchableOpacity, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
+import { Ionicons } from '@expo/vector-icons';
 import Colors from '../../theme/colors';
 import { Spacing, Radius } from '../../theme/spacing';
 import Typography from '../../theme/typography';
@@ -104,15 +105,12 @@ const RegisterScreen = ({ navigation }) => {
 
           {step === 2 && (
             <View style={styles.form}>
-              <Input label="Group Name" placeholder="e.g. Accra Women Susu" value={form.groupName}
-                onChangeText={(v) => update('groupName', v)}
-                leftIcon={<Text style={styles.icon}>🏦</Text>} />
               <Text style={styles.roleLabel}>Your Role</Text>
               <View style={styles.roleRow}>
                 {['member', 'admin'].map((role) => (
                   <TouchableOpacity key={role}
                     style={[styles.roleBtn, form.groupRole === role && styles.roleSelected]}
-                    onPress={() => update('groupRole', role)}>
+                    onPress={() => setForm({ ...form, groupRole: role, groupName: role === 'member' ? '' : form.groupName })}>
                     <Text style={[styles.roleText, form.groupRole === role && styles.roleTextSelected]}>
                       {role === 'admin' ? '👑 Admin' : '👤 Member'}
                     </Text>
@@ -120,6 +118,12 @@ const RegisterScreen = ({ navigation }) => {
                 ))}
               </View>
               <Text style={styles.hint}>Admins can manage members, loans and settings.</Text>
+
+              {form.groupRole === 'admin' && (
+                <Input label="Group Name" placeholder="e.g. Accra Women Susu" value={form.groupName}
+                  onChangeText={(v) => update('groupName', v)}
+                  leftIcon={<Text style={styles.icon}>🏦</Text>} />
+              )}
 
               {/* Deontology: informed consent — users must know what data is shared before joining */}
               <View style={styles.consentBox}>

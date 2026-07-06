@@ -1,18 +1,20 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, FlatList,
   TouchableOpacity, RefreshControl, ActivityIndicator, Alert,
 } from 'react-native';
-import Colors from '../../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
 import { Spacing, Radius } from '../../theme/spacing';
 import Typography from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
 import { groupService } from '../../services/groupService';
 
-const avatarColors = [Colors.primary, Colors.secondary, Colors.info, Colors.success, '#8B5CF6', '#EC4899'];
-
 const JoinRequestsScreen = ({ navigation }) => {
   const { groupId } = useAuth();
+  const { Colors } = useTheme();
+  const styles = makeStyles(Colors);
+  const avatarColors = [Colors.primary, Colors.secondary, Colors.info, Colors.success, '#8B5CF6', '#EC4899'];
   const [requests, setRequests]   = useState([]);
   const [loading, setLoading]     = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -108,7 +110,7 @@ const JoinRequestsScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>←</Text>
+          <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.title}>Join Requests</Text>
         <View style={{ width: 36 }} />
@@ -134,7 +136,7 @@ const JoinRequestsScreen = ({ navigation }) => {
           }
           ListEmptyComponent={() => (
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>✅</Text>
+              <Ionicons name="checkmark-circle-outline" size={52} color={Colors.textMuted} />
               <Text style={styles.emptyTitle}>All clear</Text>
               <Text style={styles.emptyText}>No pending join requests.</Text>
             </View>
@@ -145,7 +147,7 @@ const JoinRequestsScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.sm },
   backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center', shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },

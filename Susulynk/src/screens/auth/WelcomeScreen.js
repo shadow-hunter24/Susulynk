@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import Button from '../../components/Button';
+import { Ionicons } from '@expo/vector-icons';
 import Colors from '../../theme/colors';
 import { Spacing, Radius } from '../../theme/spacing';
 import Typography from '../../theme/typography';
@@ -31,12 +32,12 @@ const WelcomeScreen = ({ navigation }) => {
       {/* Feature Cards */}
       <View style={styles.features}>
         {[
-          { icon: '💰', title: 'Track Contributions', desc: 'Record every member\'s savings in real time' },
-          { icon: '🤝', title: 'Manage Groups', desc: 'Administer your Susu group with ease' },
-          { icon: '📊', title: 'Clear Reports', desc: 'Get instant financial summaries and insights' },
+          { iconName: 'wallet', title: 'Track Contributions', desc: 'Record every member\'s savings in real time' },
+          { iconName: 'people', title: 'Manage Groups', desc: 'Administer your Susu group with ease' },
+          { iconName: 'bar-chart', title: 'Clear Reports', desc: 'Get instant financial summaries and insights' },
         ].map((f, i) => (
           <View key={i} style={styles.featureItem}>
-            <Text style={styles.featureIcon}>{f.icon}</Text>
+            <Ionicons name={f.iconName} size={28} color={Colors.primary} style={{ marginRight: Spacing.md }} />
             <View style={styles.featureText}>
               <Text style={styles.featureTitle}>{f.title}</Text>
               <Text style={styles.featureDesc}>{f.desc}</Text>

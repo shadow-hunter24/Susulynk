@@ -1,17 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, FlatList,
   TouchableOpacity, Alert, RefreshControl, ActivityIndicator,
 } from 'react-native';
 import Badge from '../../components/Badge';
 import Button from '../../components/Button';
-import Colors from '../../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
 import { Spacing, Radius } from '../../theme/spacing';
 import Typography from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
 import { payoutService } from '../../services/payoutService';
-
-const avatarColors = [Colors.primary, Colors.secondary, Colors.info, Colors.success, '#8B5CF6', '#EC4899', Colors.warning, Colors.primaryLight];
 
 const getStatusConfig = (status) => {
   switch (status) {
@@ -23,6 +22,9 @@ const getStatusConfig = (status) => {
 
 const PayoutScreen = ({ navigation }) => {
   const { groupId, isAdmin, user } = useAuth();
+  const { Colors } = useTheme();
+  const styles = makeStyles(Colors);
+  const avatarColors = [Colors.primary, Colors.secondary, Colors.info, Colors.success, '#8B5CF6', '#EC4899', Colors.warning, Colors.primaryLight];
   const [payouts, setPayouts]     = useState([]);
   const [current, setCurrent]     = useState(null);
   const [paidCount, setPaidCount] = useState(0);
@@ -155,7 +157,7 @@ const PayoutScreen = ({ navigation }) => {
             ListHeaderComponent={<Text style={styles.listHeader}>Full Rotation Schedule</Text>}
             ListEmptyComponent={() => (
               <View style={styles.empty}>
-                <Text style={styles.emptyIcon}>🎉</Text>
+                <Ionicons name="gift-outline" size={52} color={Colors.textMuted} />
                 <Text style={styles.emptyText}>No payout schedule yet</Text>
               </View>
             )}
@@ -166,7 +168,7 @@ const PayoutScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.sm },
   title: { ...Typography.h2, color: Colors.textPrimary },

@@ -101,6 +101,12 @@ model Group {
   autoReminders      Boolean  @default(true)
   isArchived         Boolean  @default(false)
   isPublic           Boolean  @default(true)   // visible in browse list
+  // Payment account details — shown to members when they pay
+  momoNumber         String?  // group MoMo number members send contributions to
+  momoName           String?  // registered name on the MoMo account
+  bankAccount        String?  // bank account number
+  bankName           String?  // bank name e.g. "GCB Bank"
+  bankAccountName    String?  // account holder name
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 

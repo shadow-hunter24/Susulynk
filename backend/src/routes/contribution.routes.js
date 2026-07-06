@@ -17,7 +17,7 @@ router.post(
   [
     body('amount').isFloat({ min: 1 }).withMessage('Amount must be greater than 0'),
     body('cycle').notEmpty().withMessage('Cycle is required'),
-    body('method').optional().isIn(['MOBILE_MONEY', 'CASH', 'BANK_TRANSFER']),
+    body('method').optional().isIn(['MOBILE_MONEY', 'BANK_TRANSFER']),
   ],
   validate,
   async (req, res, next) => {
@@ -37,6 +37,11 @@ router.post(
       });
       if (existing && existing.status === 'PAID') {
         return res.status(409).json({ error: `You have already paid for ${cycle}` });
+      }
+
+      // Reference is required — it's proof of the transfer
+      if (!reference) {
+        return res.status(422).json({ error: 'Transaction reference is required' });
       }
 
       // Create as PENDING — admin must confirm
@@ -152,7 +157,7 @@ router.post(
     body('memberId').notEmpty().withMessage('memberId is required'),
     body('amount').isFloat({ min: 1 }).withMessage('Amount must be greater than 0'),
     body('cycle').notEmpty().withMessage('Cycle (e.g. June 2026) is required'),
-    body('method').optional().isIn(['MOBILE_MONEY', 'CASH', 'BANK_TRANSFER']),
+    body('method').optional().isIn(['MOBILE_MONEY', 'BANK_TRANSFER']),
   ],
   validate,
   async (req, res, next) => {
@@ -242,7 +247,8 @@ router.post('/:groupId/reminders', authenticate, requireAdmin, async (req, res, 
 
     const group = await prisma.group.findUnique({ where: { id: groupId } });
     if (!group) return res.status(404).json({ error: 'Group not found' });
-    if (!group.autoReminders) return res.status(403).json({ error: 'Auto reminders are disabled for this group' });
+    // Note: autoReminders flag only gates automated scheduled reminders — admin can always
+    // send manual reminders regardless of that setting.
 
     // Get all active members
     const members = await prisma.groupMember.findMany({
@@ -250,17 +256,18 @@ router.post('/:groupId/reminders', authenticate, requireAdmin, async (req, res, 
       include: { user: { select: { id: true, fullName: true } } },
     });
 
-    // Get members who have already paid for this cycle
-    const paidMemberIds = (await prisma.contribution.findMany({
-      where: { groupId, cycle, status: 'PAID' },
+    // Get members who have already paid (PAID) or submitted (PENDING) for this cycle
+    // — exclude both so we don't remind people who are awaiting confirmation
+    const nonDebtorIds = (await prisma.contribution.findMany({
+      where: { groupId, cycle, status: { in: ['PAID', 'PENDING'] } },
       select: { memberId: true },
     })).map(c => c.memberId);
 
-    // Send reminders only to members who haven't paid yet
-    const unpaidMembers = members.filter(m => !paidMemberIds.includes(m.id));
+    // Send reminders only to members who haven't paid or submitted yet
+    const unpaidMembers = members.filter(m => !nonDebtorIds.includes(m.id));
 
     if (unpaidMembers.length === 0) {
-      return res.json({ message: 'All members have paid for this cycle', reminded: 0 });
+      return res.json({ message: 'All members have paid or submitted payment for this cycle', reminded: 0 });
     }
 
     await prisma.notification.createMany({

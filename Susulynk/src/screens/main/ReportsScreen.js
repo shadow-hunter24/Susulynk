@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import Card from '../../components/Card';
 import StatCard from '../../components/StatCard';
-import Colors from '../../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
 import { Spacing, Radius } from '../../theme/spacing';
 import Typography from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
@@ -11,6 +12,8 @@ import { contributionService } from '../../services/contributionService';
 
 const ReportsScreen = () => {
   const { groupId, isAdmin } = useAuth();
+  const { Colors } = useTheme();
+  const styles = makeStyles(Colors);
   const [cycles, setCycles]           = useState([]);
   const [selectedCycle, setSelectedCycle] = useState(null);
   const [report, setReport]           = useState(null);
@@ -68,7 +71,7 @@ const ReportsScreen = () => {
           <ActivityIndicator color={Colors.primary} style={{ marginTop: Spacing.xl }} />
         ) : !report ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>📊</Text>
+            <Ionicons name="bar-chart-outline" size={52} color={Colors.textMuted} />
             <Text style={styles.emptyText}>No report data available</Text>
           </View>
         ) : (
@@ -152,7 +155,7 @@ const ReportsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   container: { paddingBottom: Spacing.xl },
   header: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.sm },

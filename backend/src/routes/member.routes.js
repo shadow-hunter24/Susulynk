@@ -14,10 +14,21 @@ router.get('/:groupId', authenticate, requireMember, async (req, res, next) => {
   try {
     const { search, status } = req.query;
 
+    // Default to ACTIVE members only; admins can pass status=ALL to see every record
+    const isAdmin = req.membership?.role === 'ADMIN';
+    let statusFilter;
+    if (status === 'ALL' && isAdmin) {
+      statusFilter = undefined; // no filter — return all statuses
+    } else if (status) {
+      statusFilter = status.toUpperCase();
+    } else {
+      statusFilter = 'ACTIVE'; // default: active members only
+    }
+
     const members = await prisma.groupMember.findMany({
       where: {
         groupId: req.params.groupId,
-        ...(status && { status }),
+        ...(statusFilter && { status: statusFilter }),
         ...(search && {
           user: {
             OR: [

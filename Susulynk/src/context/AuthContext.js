@@ -48,13 +48,15 @@ export function AuthProvider({ children }) {
   // ── Login ──────────────────────────────────────────────
   const login = useCallback(async (phone, password) => {
     const res = await authService.login(phone, password);
-    const activeGroup = res.user.memberships?.[0]?.group || null;
+    // Only consider ACTIVE memberships as the active group — PENDING ones await admin approval
+    const activeMembership = res.user.memberships?.find(m => m.status === 'ACTIVE') || null;
+    const activeGroup = activeMembership?.group || null;
     const cleanUser = {
       id: res.user.id,
       fullName: res.user.fullName,
       phone: res.user.phone,
       email: res.user.email,
-      role: res.user.memberships?.[0]?.role || 'MEMBER',
+      role: activeMembership?.role || 'MEMBER',
       memberships: res.user.memberships || [],
     };
     // Store full group object including interestRate
@@ -104,12 +106,26 @@ export function AuthProvider({ children }) {
     try {
       const me = await authService.getMe();
 
-      // Find the role for the currently active group, not just memberships[0]
-      const activeMembership = group
-        ? me.memberships?.find(m => m.group?.id === group.id)
-        : me.memberships?.[0];
+      // Only consider ACTIVE memberships — skip PENDING ones awaiting admin approval
+      const activeMemberships = me.memberships?.filter(m => m.status === 'ACTIVE') || [];
 
-      const activeGroup = activeMembership?.group || group;
+      // Prefer the currently active group if the user still belongs to it.
+      // If there's no active group yet (e.g. after a pending join gets approved),
+      // fall back to the first active membership so groupId is never left null.
+      const activeMembership = group?.id
+        ? activeMemberships.find(m => m.group?.id === group.id) || activeMemberships[0]
+        : activeMemberships[0];
+
+      const resolvedGroup = activeMembership?.group || null;
+
+      // Build the full group object with all fields the app depends on
+      const fullGroup = resolvedGroup ? {
+        id:                 resolvedGroup.id,
+        name:               resolvedGroup.name,
+        contributionAmount: resolvedGroup.contributionAmount,
+        currency:           resolvedGroup.currency || 'GHS',
+        interestRate:       resolvedGroup.interestRate ?? 5,
+      } : (group?.id ? group : null);
 
       const cleanUser = {
         id:          me.id,
@@ -121,7 +137,10 @@ export function AuthProvider({ children }) {
         memberships: me.memberships || [],
       };
       setUser(cleanUser);
-      if (activeGroup) setGroup(activeGroup);
+      if (fullGroup) {
+        setGroup(fullGroup);
+        await SecureStore.setItemAsync(GROUP_KEY, JSON.stringify(fullGroup));
+      }
       await SecureStore.setItemAsync(USER_KEY, JSON.stringify(cleanUser));
     } catch (_) {}
   }, [group, user]);
@@ -130,6 +149,18 @@ export function AuthProvider({ children }) {
   // Finds the user's role in the new group from their memberships
   // and updates both group and user.role atomically
   const switchGroup = useCallback(async (newGroup, roleOverride) => {
+    // If no group id (leaving/deleting), clear the active group
+    if (!newGroup?.id) {
+      const updatedUser = { ...user, role: 'MEMBER' };
+      setGroup(null);
+      setUser(updatedUser);
+      await Promise.all([
+        SecureStore.deleteItemAsync(GROUP_KEY),
+        SecureStore.setItemAsync(USER_KEY, JSON.stringify(updatedUser)),
+      ]);
+      return;
+    }
+
     // Determine the correct role for this group
     const membership = user?.memberships?.find(m => m.group?.id === newGroup.id);
     const newRole = roleOverride || membership?.role || 'MEMBER';

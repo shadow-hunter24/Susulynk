@@ -4,6 +4,7 @@ import {
   ScrollView, TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Avatar from '../../components/Avatar';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { Spacing, Radius } from '../../theme/spacing';
@@ -13,8 +14,6 @@ const MoreScreen = ({ navigation }) => {
   const { Colors } = useTheme();
   const { user, group, isAdmin } = useAuth();
   const styles = makeStyles(Colors);
-
-  const initials = user?.fullName?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?';
 
   const Section = ({ title, children }) => (
     <View style={styles.section}>
@@ -56,8 +55,8 @@ const MoreScreen = ({ navigation }) => {
         activeOpacity={0.8}
       >
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{initials}</Text>
-        </View>
+            <Avatar name={user?.fullName} uri={user?.avatarUrl} size={48} />
+          </View>
         <View style={styles.profileInfo}>
           <Text style={styles.profileName}>{user?.fullName || '—'}</Text>
           <Text style={styles.profileGroup}>{group?.name || 'No group selected'}</Text>
@@ -170,8 +169,7 @@ const makeStyles = (Colors) => StyleSheet.create({
     backgroundColor: Colors.surface,
     borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
-  avatar:        { width: 48, height: 48, borderRadius: 24, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.md },
-  avatarText:    { color: Colors.white, fontWeight: '700', fontSize: 16 },
+  avatar:        { marginRight: Spacing.md },
   profileInfo:   { flex: 1 },
   profileName:   { ...Typography.label, color: Colors.textPrimary },
   profileGroup:  { ...Typography.caption, color: Colors.textSecondary, marginTop: 2 },

@@ -243,19 +243,21 @@ router.patch(
     body('fullName').optional().trim().notEmpty(),
     body('email').optional().isEmail(),
     body('bio').optional().trim(),
+    body('avatarUrl').optional().isString(),
   ],
   validate,
   async (req, res, next) => {
     try {
-      const { fullName, email, bio } = req.body;
+      const { fullName, email, bio, avatarUrl } = req.body;
       const updated = await prisma.user.update({
         where: { id: req.user.id },
         data: {
           ...(fullName && { fullName }),
           ...(email !== undefined && { email }),
           ...(bio !== undefined && { bio }),
+          ...(avatarUrl !== undefined && { avatarUrl }),
         },
-        select: { id: true, fullName: true, phone: true, email: true, bio: true },
+        select: { id: true, fullName: true, phone: true, email: true, bio: true, avatarUrl: true },
       });
       res.json(updated);
     } catch (err) {

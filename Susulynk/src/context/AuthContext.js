@@ -56,6 +56,7 @@ export function AuthProvider({ children }) {
       fullName: res.user.fullName,
       phone: res.user.phone,
       email: res.user.email,
+      avatarUrl: res.user.avatarUrl || null,
       role: activeMembership?.role || 'MEMBER',
       memberships: res.user.memberships || [],
     };
@@ -133,6 +134,7 @@ export function AuthProvider({ children }) {
         phone:       me.phone,
         email:       me.email,
         bio:         me.bio,
+        avatarUrl:   me.avatarUrl || null,
         role:        activeMembership?.role || user?.role || 'MEMBER',
         memberships: me.memberships || [],
       };

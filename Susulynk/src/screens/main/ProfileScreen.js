@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Card from '../../components/Card';
 import Badge from '../../components/Badge';
 import Button from '../../components/Button';
+import Avatar from '../../components/Avatar';
 import { useTheme } from '../../context/ThemeContext';
 import { Spacing, Radius } from '../../theme/spacing';
 import Typography from '../../theme/typography';
@@ -14,8 +15,6 @@ const ProfileScreen = ({ navigation }) => {
   const { user, group, logout, isAdmin } = useAuth();
   const styles = makeStyles(Colors);
   const [prefs, setPrefs] = useState({ reports: true });
-
-  const initials = user?.fullName?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?';
 
   const handleLogout = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -63,7 +62,17 @@ const ProfileScreen = ({ navigation }) => {
 
         {/* Avatar card */}
         <View style={styles.profileCard}>
-          <View style={styles.avatar}><Text style={styles.avatarText}>{initials}</Text></View>
+          <TouchableOpacity onPress={() => navigation.navigate('EditProfile')} style={{ marginBottom: Spacing.md }}>
+            <Avatar
+              name={user?.fullName}
+              uri={user?.avatarUrl}
+              size={88}
+              style={{ shadowColor: Colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6 }}
+            />
+            <View style={[styles.cameraEditBadge, { backgroundColor: Colors.primary }]}>
+              <Ionicons name="camera" size={12} color={Colors.white} />
+            </View>
+          </TouchableOpacity>
           <Text style={styles.userName}>{user?.fullName || '—'}</Text>
           <Text style={styles.userPhone}>{user?.phone || '—'}</Text>
           <View style={styles.badgeRow}>
@@ -113,7 +122,7 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.sectionTitle}>Admin Tools</Text>
             <Card noPadding>
               <MenuRow iconName="settings-outline"  label="Group Settings"  onPress={() => navigation.navigate('GroupSettings')} />
-              <MenuRow iconName="people-outline"    label="Manage Members"  onPress={() => navigation.navigate('Members')} />
+              <MenuRow iconName="people-outline"    label="Manage Members"  onPress={() => navigation.navigate('MainTabs', { screen: 'Members' })} />
               <MenuRow iconName="mail-open-outline" label="Join Requests"   onPress={() => navigation.navigate('JoinRequests')} isLast />
             </Card>
           </>
@@ -156,8 +165,7 @@ const makeStyles = (Colors) => StyleSheet.create({
   backBtn:        { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center', shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
   headerTitle:    { ...Typography.h4, color: Colors.textPrimary },
   profileCard:    { alignItems: 'center', backgroundColor: Colors.surface, borderRadius: Radius.xl, padding: Spacing.lg, marginBottom: Spacing.md, shadowColor: Colors.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
-  avatar:         { width: 84, height: 84, borderRadius: 42, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.md },
-  avatarText:     { fontSize: 30, fontWeight: '800', color: Colors.white },
+  cameraEditBadge:{ position: 'absolute', bottom: 2, right: 2, width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: Colors.surface },
   userName:       { ...Typography.h3, color: Colors.textPrimary, marginBottom: 4 },
   userPhone:      { ...Typography.body2, color: Colors.textSecondary, marginBottom: Spacing.sm },
   badgeRow:       { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap', justifyContent: 'center' },

@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Card from '../../components/Card';
 import StatCard from '../../components/StatCard';
 import Badge from '../../components/Badge';
+import Avatar from '../../components/Avatar';
 import { useTheme } from '../../context/ThemeContext';
 import { Spacing, Radius } from '../../theme/spacing';
 import Typography from '../../theme/typography';
@@ -68,7 +69,6 @@ const DashboardScreen = ({ navigation }) => {
   const onRefresh = () => { setRefreshing(true); load(true); };
 
   const firstName = user?.fullName?.split(' ')[0] || 'there';
-  const initials  = user?.fullName?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?';
   const quickActions = isAdmin ? QUICK_ACTIONS_ADMIN : QUICK_ACTIONS_MEMBER;
 
   const getActivityIconName = (status) => {
@@ -100,8 +100,12 @@ const DashboardScreen = ({ navigation }) => {
                 </View>
               )}
             </TouchableOpacity>
-            <TouchableOpacity style={styles.avatar} onPress={() => navigation.navigate('Profile')}>
-              <Text style={styles.avatarText}>{initials}</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+              <Avatar
+                name={user?.fullName}
+                uri={user?.avatarUrl}
+                size={44}
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -219,8 +223,6 @@ const makeStyles = (Colors) => StyleSheet.create({
   iconBtn:        { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center', shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
   notifBadge:     { position: 'absolute', top: -2, right: -2, backgroundColor: Colors.error, borderRadius: 8, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
   notifBadgeText: { color: Colors.white, fontSize: 9, fontWeight: '800' },
-  avatar:         { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
-  avatarText:     { color: Colors.white, fontWeight: '700', fontSize: 14 },
   heroCard:       { margin: Spacing.lg, backgroundColor: Colors.primary, borderRadius: Radius.xl, padding: Spacing.lg, shadowColor: Colors.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 },
   heroLabel:      { ...Typography.caption, color: 'rgba(255,255,255,0.8)', marginBottom: Spacing.xs },
   heroAmount:     { fontSize: 34, fontWeight: '800', color: Colors.white, marginBottom: Spacing.lg },

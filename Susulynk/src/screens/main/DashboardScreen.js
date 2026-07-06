@@ -21,15 +21,15 @@ const QUICK_ACTIONS_ADMIN = [
   { icon: 'add-circle',        label: 'Add\nContribution', screen: 'AddContribution' },
   { icon: 'cash',              label: 'New\nLoan',         screen: 'NewLoan' },
   { icon: 'person-add',        label: 'Add\nMember',       screen: 'AddMember' },
-  { icon: 'git-network',       label: 'Payout',            screen: 'MainTabs', tabScreen: 'Payout' },
+  { icon: 'gift',              label: 'Payout',            screen: 'Payout' },
+  { icon: 'bar-chart',         label: 'Reports',           screen: 'Reports' },
   { icon: 'settings',          label: 'Group\nSettings',   screen: 'GroupSettings' },
-  { icon: 'business',          label: 'New\nGroup',        screen: 'CreateGroup' },
 ];
 const QUICK_ACTIONS_MEMBER = [
   { icon: 'card',              label: 'Pay\nNow',          screen: 'MemberPay' },
   { icon: 'hand-left',         label: 'Request\nLoan',     screen: 'MyLoanRequest' },
-  { icon: 'git-network',       label: 'Payout',            screen: 'MainTabs', tabScreen: 'Payout' },
-  { icon: 'notifications',     label: 'Notifications',     screen: 'Notifications' },
+  { icon: 'gift',              label: 'Payout',            screen: 'Payout' },
+  { icon: 'bar-chart',         label: 'Reports',           screen: 'Reports' },
 ];
 
 const ACTIVITY_ICON = { contribution: 'wallet', paid: 'checkmark-circle', repay: 'refresh-circle' };
@@ -146,10 +146,7 @@ const DashboardScreen = ({ navigation }) => {
                 <TouchableOpacity
                   key={i}
                   style={styles.quickBtn}
-                  onPress={() => a.tabScreen
-                    ? navigation.navigate(a.screen, { screen: a.tabScreen })
-                    : navigation.navigate(a.screen)
-                  }
+                  onPress={() => navigation.navigate(a.screen)}
                   activeOpacity={0.75}
                 >
                   <View style={[styles.quickIcon, { backgroundColor: Colors.primary + '15' }]}>

@@ -3,29 +3,29 @@ import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 
 // Auth
-import WelcomeScreen      from '../screens/auth/WelcomeScreen';
-import LoginScreen        from '../screens/auth/LoginScreen';
-import RegisterScreen     from '../screens/auth/RegisterScreen';
+import WelcomeScreen        from '../screens/auth/WelcomeScreen';
+import LoginScreen          from '../screens/auth/LoginScreen';
+import RegisterScreen       from '../screens/auth/RegisterScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
-import OTPScreen          from '../screens/auth/OTPScreen';
-import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
+import OTPScreen            from '../screens/auth/OTPScreen';
+import ResetPasswordScreen  from '../screens/auth/ResetPasswordScreen';
 
-// Main tabs
-import DashboardScreen      from '../screens/main/DashboardScreen';
-import MembersScreen        from '../screens/main/MembersScreen';
-import ContributionsScreen  from '../screens/main/ContributionsScreen';
-import LoansScreen          from '../screens/main/LoansScreen';
-import ReportsScreen        from '../screens/main/ReportsScreen';
+// Tab screens (4 tabs)
+import DashboardScreen     from '../screens/main/DashboardScreen';
+import MembersScreen       from '../screens/main/MembersScreen';
+import ContributionsScreen from '../screens/main/ContributionsScreen';
+import LoansScreen         from '../screens/main/LoansScreen';
+import MoreScreen          from '../screens/main/MoreScreen';
+
+// Stack screens (navigated to from tabs / quick actions)
 import PayoutScreen         from '../screens/main/PayoutScreen';
-
-// Detail / modal
+import ReportsScreen        from '../screens/main/ReportsScreen';
 import AddMemberScreen      from '../screens/main/AddMemberScreen';
 import MemberDetailScreen   from '../screens/main/MemberDetailScreen';
 import AddContributionScreen from '../screens/main/AddContributionScreen';
@@ -49,7 +49,13 @@ const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
 
 function TabIcon({ name, focused, color }) {
-  return <Ionicons name={focused ? name : `${name}-outline`} size={24} color={color} />;
+  return (
+    <Ionicons
+      name={focused ? name : `${name}-outline`}
+      size={24}
+      color={color}
+    />
+  );
 }
 
 function MainTabs() {
@@ -66,23 +72,51 @@ function MainTabs() {
           paddingBottom: 8,
           paddingTop: 6,
         },
-        tabBarActiveTintColor: Colors.primary,
+        tabBarActiveTintColor:   Colors.primary,
         tabBarInactiveTintColor: Colors.textMuted,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
     >
-      <Tab.Screen name="Dashboard"     component={DashboardScreen}
-        options={{ tabBarIcon: ({ focused, color }) => <TabIcon name="home" focused={focused} color={color} />, tabBarLabel: 'Home' }} />
-      <Tab.Screen name="Members"       component={MembersScreen}
-        options={{ tabBarIcon: ({ focused, color }) => <TabIcon name="people" focused={focused} color={color} />, tabBarLabel: 'Members' }} />
-      <Tab.Screen name="Contributions" component={ContributionsScreen}
-        options={{ tabBarIcon: ({ focused, color }) => <TabIcon name="wallet" focused={focused} color={color} />, tabBarLabel: 'Savings' }} />
-      <Tab.Screen name="Loans"         component={LoansScreen}
-        options={{ tabBarIcon: ({ focused, color }) => <TabIcon name="hand-left" focused={focused} color={color} />, tabBarLabel: 'Loans' }} />
-      <Tab.Screen name="Payout"        component={PayoutScreen}
-        options={{ tabBarIcon: ({ focused, color }) => <TabIcon name="gift" focused={focused} color={color} />, tabBarLabel: 'Payout' }} />
-      <Tab.Screen name="Reports"       component={ReportsScreen}
-        options={{ tabBarIcon: ({ focused, color }) => <TabIcon name="bar-chart" focused={focused} color={color} />, tabBarLabel: 'Reports' }} />
+      <Tab.Screen
+        name="Dashboard"
+        component={DashboardScreen}
+        options={{
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ focused, color }) => <TabIcon name="home" focused={focused} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="Members"
+        component={MembersScreen}
+        options={{
+          tabBarLabel: 'Members',
+          tabBarIcon: ({ focused, color }) => <TabIcon name="people" focused={focused} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="Contributions"
+        component={ContributionsScreen}
+        options={{
+          tabBarLabel: 'Savings',
+          tabBarIcon: ({ focused, color }) => <TabIcon name="wallet" focused={focused} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="Loans"
+        component={LoansScreen}
+        options={{
+          tabBarLabel: 'Loans',
+          tabBarIcon: ({ focused, color }) => <TabIcon name="hand-left" focused={focused} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="More"
+        component={MoreScreen}
+        options={{
+          tabBarLabel: 'More',
+          tabBarIcon: ({ focused, color }) => <TabIcon name="grid" focused={focused} color={color} />,
+        }}
+      />
     </Tab.Navigator>
   );
 }
@@ -103,34 +137,41 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {token ? (
-          // ── Authenticated stack ──────────────────────────
           <>
-            <Stack.Screen name="MainTabs"       component={MainTabs} />
-            <Stack.Screen name="AddMember"      component={AddMemberScreen}       options={{ presentation: 'modal' }} />
+            <Stack.Screen name="MainTabs"        component={MainTabs} />
+            {/* Finance screens — accessible from More and Dashboard quick actions */}
+            <Stack.Screen name="Payout"          component={PayoutScreen} />
+            <Stack.Screen name="Reports"         component={ReportsScreen} />
+            {/* Member screens */}
+            <Stack.Screen name="AddMember"       component={AddMemberScreen}       options={{ presentation: 'modal' }} />
+            <Stack.Screen name="MemberDetail"    component={MemberDetailScreen} />
+            {/* Contribution screens */}
             <Stack.Screen name="AddContribution" component={AddContributionScreen} options={{ presentation: 'modal' }} />
-            <Stack.Screen name="NewLoan"        component={NewLoanScreen}         options={{ presentation: 'modal' }} />
-            <Stack.Screen name="MemberDetail"   component={MemberDetailScreen} />
-            <Stack.Screen name="LoanDetail"     component={LoanDetailScreen} />
-            <Stack.Screen name="Profile"        component={ProfileScreen} />
-            <Stack.Screen name="EditProfile"    component={EditProfileScreen} />
-            <Stack.Screen name="GroupSettings"  component={GroupSettingsScreen} />
-            <Stack.Screen name="Notifications"  component={NotificationsScreen} />
-            <Stack.Screen name="CreateGroup"    component={CreateGroupScreen} />
-            <Stack.Screen name="MyGroups"       component={MyGroupsScreen} />
-            <Stack.Screen name="BrowseGroups"   component={BrowseGroupsScreen} />
-            <Stack.Screen name="JoinRequests"   component={JoinRequestsScreen} />
-            <Stack.Screen name="MemberPay"      component={MemberPayScreen}      options={{ presentation: 'modal' }} />
-            <Stack.Screen name="MyLoanRequest"  component={MyLoanRequestScreen}  options={{ presentation: 'modal' }} />
-            <Stack.Screen name="HelpFAQ"        component={HelpFAQScreen} />
-            <Stack.Screen name="ContactSupport" component={ContactSupportScreen} />
-            <Stack.Screen name="RateApp"        component={RateAppScreen} />
-            {/* Also needed from Profile → Change Password */}
-            <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-            <Stack.Screen name="OTP"            component={OTPScreen} />
-            <Stack.Screen name="ResetPassword"  component={ResetPasswordScreen} />
+            <Stack.Screen name="MemberPay"       component={MemberPayScreen}       options={{ presentation: 'modal' }} />
+            {/* Loan screens */}
+            <Stack.Screen name="NewLoan"         component={NewLoanScreen}         options={{ presentation: 'modal' }} />
+            <Stack.Screen name="LoanDetail"      component={LoanDetailScreen} />
+            <Stack.Screen name="MyLoanRequest"   component={MyLoanRequestScreen}   options={{ presentation: 'modal' }} />
+            {/* Profile & settings */}
+            <Stack.Screen name="Profile"         component={ProfileScreen} />
+            <Stack.Screen name="EditProfile"     component={EditProfileScreen} />
+            <Stack.Screen name="GroupSettings"   component={GroupSettingsScreen} />
+            <Stack.Screen name="Notifications"   component={NotificationsScreen} />
+            {/* Group management */}
+            <Stack.Screen name="CreateGroup"     component={CreateGroupScreen} />
+            <Stack.Screen name="MyGroups"        component={MyGroupsScreen} />
+            <Stack.Screen name="BrowseGroups"    component={BrowseGroupsScreen} />
+            <Stack.Screen name="JoinRequests"    component={JoinRequestsScreen} />
+            {/* Support */}
+            <Stack.Screen name="HelpFAQ"         component={HelpFAQScreen} />
+            <Stack.Screen name="ContactSupport"  component={ContactSupportScreen} />
+            <Stack.Screen name="RateApp"         component={RateAppScreen} />
+            {/* Auth flows accessible while logged in */}
+            <Stack.Screen name="ForgotPassword"  component={ForgotPasswordScreen} />
+            <Stack.Screen name="OTP"             component={OTPScreen} />
+            <Stack.Screen name="ResetPassword"   component={ResetPasswordScreen} />
           </>
         ) : (
-          // ── Guest stack ─────────────────────────────────
           <>
             <Stack.Screen name="Welcome"        component={WelcomeScreen} />
             <Stack.Screen name="Login"          component={LoginScreen} />

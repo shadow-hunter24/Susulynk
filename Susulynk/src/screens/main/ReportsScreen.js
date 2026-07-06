@@ -52,7 +52,13 @@ const ReportsScreen = () => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Reports</Text>
+          <View style={styles.headerTop}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+              <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
+            </TouchableOpacity>
+            <Text style={styles.title}>Reports</Text>
+            <View style={{ width: 36 }} />
+          </View>
           <Text style={styles.subtitle}>Financial summary & insights</Text>
         </View>
 
@@ -158,9 +164,11 @@ const ReportsScreen = () => {
 const makeStyles = (Colors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   container: { paddingBottom: Spacing.xl },
-  header: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.sm },
-  title: { ...Typography.h2, color: Colors.textPrimary },
-  subtitle: { ...Typography.body2, color: Colors.textSecondary, marginTop: 2 },
+  header:      { paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.sm },
+  headerTop:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  backBtn:     { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center', shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
+  title:       { ...Typography.h2, color: Colors.textPrimary },
+  subtitle:    { ...Typography.body2, color: Colors.textSecondary, marginTop: 2 },
   monthScroll: { maxHeight: 44, marginBottom: Spacing.md },
   monthRow: { paddingHorizontal: Spacing.lg, gap: Spacing.sm },
   monthBtn: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs + 2, borderRadius: Radius.full, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border },

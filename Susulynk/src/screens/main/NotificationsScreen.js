@@ -92,7 +92,7 @@ const NotificationsScreen = ({ navigation }) => {
         navigation.navigate('Loans');
         break;
       case 'PAYOUT':
-        navigation.navigate('MainTabs', { screen: 'Payout' });
+        navigation.navigate('Payout');
         break;
       default:
         break;

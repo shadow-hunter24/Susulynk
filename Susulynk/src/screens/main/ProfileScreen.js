@@ -113,7 +113,7 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.sectionTitle}>Admin Tools</Text>
             <Card noPadding>
               <MenuRow iconName="settings-outline"  label="Group Settings"  onPress={() => navigation.navigate('GroupSettings')} />
-              <MenuRow iconName="people-outline"    label="Manage Members"  onPress={() => navigation.navigate('MainTabs', { screen: 'Members' })} />
+              <MenuRow iconName="people-outline"    label="Manage Members"  onPress={() => navigation.navigate('Members')} />
               <MenuRow iconName="mail-open-outline" label="Join Requests"   onPress={() => navigation.navigate('JoinRequests')} isLast />
             </Card>
           </>
